@@ -1,4 +1,4 @@
-# YOS — Personal AI Operating System
+# YOS — Personal AI Operating System · v0.5.0
 
 > A living, Telegram-accessible AI OS that compounds intelligence across ideas, goals, health, career, and daily briefings.
 
