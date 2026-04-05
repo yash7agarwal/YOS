@@ -1,0 +1,29 @@
+telegram:
+  chat_id: ${TELEGRAM_CHAT_ID}
+
+db:
+  path: ${DB_PATH}
+  gmail_org_path: ${GMAIL_ORG_DB_PATH}
+
+scheduler:
+  daily_briefing_time: "07:00"   # local time HH:MM
+
+health:
+  reminder_threshold_days: 1     # warn in briefing if no log for N days
+
+career:
+  min_match_score: 0.65          # only surface jobs above this score
+  scan_keywords:
+    - "product manager AI"
+    - "AI product manager"
+    - "head of product"
+    - "VP product"
+
+agents:
+  models:
+    default: "claude-sonnet-4-6"
+    fast: "claude-haiku-4-5-20251001"
+  max_tokens:
+    briefing: 2000
+    agent_summary: 600
+    idea_priority: 300
