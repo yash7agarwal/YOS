@@ -55,16 +55,57 @@ async def cmd_geo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def cmd_run_agents(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """/run — manually trigger all agents + compose briefing"""
-    await update.message.reply_text("⚙️ Running intelligence agents… this takes ~30s.")
+    """/run — manually trigger all daily agents + compose briefing"""
+    await update.message.reply_text("⚙️ Running daily intelligence agents… ~30s.")
     try:
-        from scheduler.daily import run_daily
         import asyncio
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, run_daily)
+        from scheduler.daily import run_daily
+        await asyncio.get_event_loop().run_in_executor(None, run_daily)
         await update.message.reply_text("✅ Done. Use `/brief` to see today's briefing.")
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error: {e}")
+
+
+async def cmd_weekly(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/weekly — trigger the weekly deep research + backlog curation Claude agents"""
+    await update.message.reply_text(
+        "🧠 Launching weekly deep research agent (Claude Opus)…\n_This takes 2-5 minutes. You'll receive a Telegram summary when done._",
+        parse_mode="Markdown",
+    )
+    try:
+        import asyncio
+        from scheduler.weekly import run_weekly
+        await asyncio.get_event_loop().run_in_executor(None, run_weekly)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Weekly agent error: {e}")
+
+
+async def cmd_monthly(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/monthly — trigger the monthly OS report Claude agent"""
+    await update.message.reply_text(
+        "📅 Launching monthly OS report agent (Claude Opus)…\n_This takes 3-6 minutes. You'll receive a full report when done._",
+        parse_mode="Markdown",
+    )
+    try:
+        import asyncio
+        from scheduler.monthly import run_monthly
+        await asyncio.get_event_loop().run_in_executor(None, run_monthly)
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Monthly agent error: {e}")
+
+
+async def cmd_health(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """/syshealth — check and auto-restart all YOS processes"""
+    await update.message.reply_text("🩺 Checking system health…")
+    try:
+        from agents.claude.system_health import run
+        status = run()
+        lines = ["*YOS System Health*\n"]
+        for name, state in status.items():
+            lines.append(f"{state} — {name}")
+        await update.message.reply_text("\n".join(lines), parse_mode="Markdown")
+    except Exception as e:
+        await update.message.reply_text(f"⚠️ Health check error: {e}")
 
 
 async def _send_agent_summary(update: Update, agent: str) -> None:

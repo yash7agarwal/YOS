@@ -14,7 +14,7 @@ from bot.commands.goals import cmd_goal, cmd_goals, cmd_progress, cmd_checkin
 from bot.commands.journal import cmd_note, cmd_journal
 from bot.commands.health import cmd_health, cmd_healthlog
 from bot.commands.today import cmd_today
-from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents
+from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents, cmd_weekly, cmd_monthly, cmd_health
 from bot.commands.career import cmd_jobs, cmd_apply, cmd_skills, cmd_skill, cmd_resume
 
 load_dotenv()
@@ -123,5 +123,8 @@ def register(app: Application) -> None:
     app.add_handler(CommandHandler("biz", wrap(cmd_biz)))
     app.add_handler(CommandHandler("geo", wrap(cmd_geo)))
     app.add_handler(CommandHandler("run", wrap(cmd_run_agents)))
+    app.add_handler(CommandHandler("weekly", wrap(cmd_weekly)))
+    app.add_handler(CommandHandler("monthly", wrap(cmd_monthly)))
+    app.add_handler(CommandHandler("syshealth", wrap(cmd_health)))
 
     logger.info("All command handlers registered.")

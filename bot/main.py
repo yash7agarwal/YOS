@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder
@@ -13,6 +14,12 @@ from utils.logger import get_logger
 load_dotenv()
 logger = get_logger("yos.bot")
 
+YOS_DIR = Path(__file__).parent.parent
+
+
+def _write_pid() -> None:
+    (YOS_DIR / "logs" / "bot.pid").write_text(str(os.getpid()))
+
 
 def main() -> None:
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -20,8 +27,8 @@ def main() -> None:
         logger.error("TELEGRAM_BOT_TOKEN not set in .env")
         sys.exit(1)
 
-    # Initialize DB on startup
     init_db()
+    _write_pid()
     logger.info("YOS database ready.")
 
     app = ApplicationBuilder().token(token).build()
