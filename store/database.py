@@ -148,6 +148,19 @@ def init_db() -> None:
             response_sent   INTEGER DEFAULT 0
         );
 
+        -- ── EVALUATIONS (AOS compounding loop) ──────────────────────
+        CREATE TABLE IF NOT EXISTS evaluations (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent           TEXT NOT NULL,
+            goal            TEXT,
+            correctness     INTEGER NOT NULL,
+            efficiency      INTEGER NOT NULL,
+            reusability     INTEGER NOT NULL,
+            clarity         INTEGER NOT NULL,
+            notes           TEXT,
+            evaluated_at    TEXT NOT NULL
+        );
+
         -- ── INDEXES ──────────────────────────────────────────────────
         CREATE INDEX IF NOT EXISTS idx_ideas_status    ON ideas (status, priority_score DESC);
         CREATE INDEX IF NOT EXISTS idx_journal_date    ON journal (entry_date DESC);
@@ -156,6 +169,7 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_agent_runs_date ON agent_runs (run_date, agent);
         CREATE INDEX IF NOT EXISTS idx_health_date     ON health_logs (log_date DESC);
         CREATE INDEX IF NOT EXISTS idx_briefings_date  ON briefings (date DESC);
+        CREATE INDEX IF NOT EXISTS idx_evals_agent     ON evaluations (agent, evaluated_at DESC);
         """)
     print(f"YOS database initialized at {DB_PATH}")
 
@@ -457,3 +471,41 @@ def log_bot_interaction(interaction_type: str, input_text: str, command_name: st
             (datetime.utcnow().isoformat(), interaction_type, input_text,
              command_name, status, error_message, int(response_sent)),
         )
+
+
+# ── EVALUATIONS (AOS compounding loop) ───────────────────────────────────────
+
+def save_evaluation(scores: dict) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """INSERT INTO evaluations
+               (agent, goal, correctness, efficiency, reusability, clarity, notes, evaluated_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (
+                scores.get("agent", "unknown"),
+                scores.get("goal", ""),
+                int(scores.get("correctness", 3)),
+                int(scores.get("efficiency", 3)),
+                int(scores.get("reusability", 3)),
+                int(scores.get("clarity", 3)),
+                scores.get("notes", ""),
+                scores.get("evaluated_at", datetime.utcnow().isoformat()),
+            ),
+        )
+
+
+def get_evaluation_summary(agent: str | None = None, days: int = 30) -> list[dict]:
+    since = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    with get_conn() as conn:
+        if agent:
+            rows = conn.execute(
+                """SELECT * FROM evaluations WHERE agent=? AND evaluated_at >= ?
+                   ORDER BY evaluated_at DESC""",
+                (agent, since),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM evaluations WHERE evaluated_at >= ? ORDER BY evaluated_at DESC",
+                (since,),
+            ).fetchall()
+    return [dict(r) for r in rows]

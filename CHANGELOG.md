@@ -2,6 +2,19 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-04-06
+### Added
+- AOS rework: `memory/` layer with learnings.md, patterns.md, decisions.md, user_context.md — populated from full build session
+- `workflows/` layer with SOPs for daily_briefing, weekly_analysis, monthly_report, backlog_curation, system_health
+- `tools/` execution layer: db.py, ai.py, feeds.py, notify.py, eval.py — deterministic wrappers over utils/store
+- `evaluations` table in SQLite (Correctness/Efficiency/Reusability/Clarity 1-5 per agent run)
+- `tools/eval.py` — AOS compounding loop: Claude self-evaluates every meaningful agent output
+- `.tmp/` directory (disposable/regenerable files, gitignored)
+### Changed
+- `agents/claude/runner.py` — auto self-evaluates every run after completion
+- `store/database.py` — added evaluations table + save_evaluation/get_evaluation_summary functions
+- `.gitignore` — added .tmp/ exclusion rule
+
 ## [0.5.0] — 2026-04-06
 ### Added
 - Claude multi-step agent runner with tool-use loop (up to 15 turns, Opus/Sonnet)

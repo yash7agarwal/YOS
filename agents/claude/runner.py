@@ -93,4 +93,14 @@ def run_agent(
     save_agent_run(today, name, goal, final_text[:5000], turns_used, "ok", duration_ms)
     logger.info(f"[{name}] Done — {turns_used} turns, {duration_ms}ms")
 
+    # AOS compounding loop: self-evaluate every meaningful run
+    if final_text and len(final_text) > 100:
+        try:
+            from tools.eval import score_output
+            scores = score_output(agent=name, goal=goal, output=final_text)
+            avg = (scores["correctness"] + scores["efficiency"] + scores["reusability"] + scores["clarity"]) / 4
+            logger.info(f"[{name}] Eval scores: C={scores['correctness']} E={scores['efficiency']} R={scores['reusability']} Cl={scores['clarity']} avg={avg:.1f}")
+        except Exception as exc:
+            logger.warning(f"[{name}] Self-eval failed: {exc}")
+
     return final_text

@@ -11,3 +11,7 @@ dist/
 build/
 .venv/
 venv/
+
+# AOS disposable temp files
+.tmp/*
+!.tmp/.gitkeep
