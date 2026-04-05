@@ -14,6 +14,7 @@ from bot.commands.goals import cmd_goal, cmd_goals, cmd_progress, cmd_checkin
 from bot.commands.journal import cmd_note, cmd_journal
 from bot.commands.health import cmd_health, cmd_healthlog
 from bot.commands.today import cmd_today
+from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -61,7 +62,11 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "`/health <sleep> <energy> <stress> [notes]`\n"
         "`/healthlog` — last 7 days\n\n"
         "🧠 *Intelligence*\n"
-        "`/brief` — today's briefing\n\n"
+        "`/brief` — full daily briefing\n"
+        "`/tech` — tech & AI signals\n"
+        "`/biz` — business & markets\n"
+        "`/geo` — geopolitics\n"
+        "`/run` — trigger agents now\n\n"
         "📋 *Dashboard*\n"
         "`/today` — daily overview",
         parse_mode="Markdown",
@@ -97,5 +102,12 @@ def register(app: Application) -> None:
 
     # Dashboard
     app.add_handler(CommandHandler("today", wrap(cmd_today)))
+
+    # Intelligence
+    app.add_handler(CommandHandler("brief", wrap(cmd_brief)))
+    app.add_handler(CommandHandler("tech", wrap(cmd_tech)))
+    app.add_handler(CommandHandler("biz", wrap(cmd_biz)))
+    app.add_handler(CommandHandler("geo", wrap(cmd_geo)))
+    app.add_handler(CommandHandler("run", wrap(cmd_run_agents)))
 
     logger.info("All command handlers registered.")
