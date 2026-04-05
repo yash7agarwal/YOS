@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from store.database import get_briefing, get_latest_agent_summaries, save_briefing, mark_briefing_sent
+from store.database import (
+    get_briefing, get_latest_agent_summaries, save_briefing, mark_briefing_sent,
+    days_since_health_log, get_jobs,
+)
 from integrations.gmail import get_briefing_snippet
-from utils.claude_client import ask
 from utils.telegram import send_message
 from utils.logger import get_logger
 
@@ -52,6 +54,26 @@ def compose_briefing(date: str | None = None) -> str:
 
     if gmail_snippet:
         lines += ["", SECTION_DIVIDER, "", gmail_snippet]
+
+    # Career: top job match
+    top_jobs = get_jobs(status="new", min_score=0.0)
+    if top_jobs:
+        top = top_jobs[0]
+        score_pct = int(top["match_score"] * 100)
+        lines += [
+            "", SECTION_DIVIDER, "",
+            "🎯 *Top Career Match*",
+            f"• *{top['title']}* @ {top.get('company', '?')} — {score_pct}% match",
+            f"  _{top.get('match_reason', '')}_",
+        ]
+
+    # Phase 4: Health gap alert
+    health_days = days_since_health_log()
+    if health_days >= 1:
+        lines += [
+            "", SECTION_DIVIDER, "",
+            f"⚠️ *Health Check* — No log in {health_days} day(s). Use `/health` to log today.",
+        ]
 
     briefing_text = "\n".join(lines)
 

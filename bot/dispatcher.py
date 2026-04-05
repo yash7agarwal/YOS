@@ -15,6 +15,7 @@ from bot.commands.journal import cmd_note, cmd_journal
 from bot.commands.health import cmd_health, cmd_healthlog
 from bot.commands.today import cmd_today
 from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents
+from bot.commands.career import cmd_jobs, cmd_apply, cmd_skills, cmd_skill, cmd_resume
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -61,6 +62,12 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "🩺 *Health*\n"
         "`/health <sleep> <energy> <stress> [notes]`\n"
         "`/healthlog` — last 7 days\n\n"
+        "💼 *Career*\n"
+        "`/jobs` — top job matches\n"
+        "`/apply <id>` — mark as applied\n"
+        "`/skills` — skill map\n"
+        "`/skill <name> [level]` — add/update skill\n"
+        "`/resume` — show or update resume\n\n"
         "🧠 *Intelligence*\n"
         "`/brief` — full daily briefing\n"
         "`/tech` — tech & AI signals\n"
@@ -102,6 +109,13 @@ def register(app: Application) -> None:
 
     # Dashboard
     app.add_handler(CommandHandler("today", wrap(cmd_today)))
+
+    # Career
+    app.add_handler(CommandHandler("jobs", wrap(cmd_jobs)))
+    app.add_handler(CommandHandler("apply", wrap(cmd_apply)))
+    app.add_handler(CommandHandler("skills", wrap(cmd_skills)))
+    app.add_handler(CommandHandler("skill", wrap(cmd_skill)))
+    app.add_handler(CommandHandler("resume", wrap(cmd_resume)))
 
     # Intelligence
     app.add_handler(CommandHandler("brief", wrap(cmd_brief)))

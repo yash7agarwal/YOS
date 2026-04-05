@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Goals{% endblock %}
+{% block nav_goals %}active{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-white">🎯 Goals</h2>
+  </div>
+
+  <!-- Add goal form -->
+  <form action="/api/goals/add" method="post" class="flex gap-3 mb-8">
+    <input name="title" placeholder="New goal…" required
+      class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+    <select name="timeframe"
+      class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="quarterly">Quarterly</option>
+      <option value="yearly">Yearly</option>
+    </select>
+    <button type="submit"
+      class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg font-medium">
+      + Add
+    </button>
+  </form>
+
+  <!-- Goal sections -->
+  {% for tf in timeframes %}
+  {% if grouped[tf] %}
+  <div class="mb-8">
+    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+      {{ emoji[tf] }} {{ tf|capitalize }}
+    </h3>
+    <div class="space-y-3">
+      {% for g in grouped[tf] %}
+      <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-white font-medium">{{ g.title }}</span>
+          <span class="text-xs font-mono text-gray-400">{{ g.progress }}%</span>
+        </div>
+        <div class="w-full bg-gray-700 rounded-full h-2 mb-3">
+          <div class="bg-blue-500 h-2 rounded-full progress-bar"
+               style="width: {{ g.progress }}%"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="range" min="0" max="100" value="{{ g.progress }}"
+            onchange="updateProgress({{ g.id }}, this.value)"
+            class="flex-1 accent-blue-500 cursor-pointer"/>
+          <span id="pct-{{ g.id }}" class="text-xs text-gray-400 w-8 text-right">{{ g.progress }}%</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- Recent Check-ins -->
+  {% if checkins %}
+  <div>
+    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Check-ins</h3>
+    <div class="space-y-2">
+      {% for c in checkins[:5] %}
+      <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-4">
+        <span class="text-xs text-gray-500 font-mono w-24 shrink-0">{{ c.checkin_date }}</span>
+        <span class="text-lg">{{ ['','😴','😐','🙂','😊','🔥'][c.mood|int] if c.mood else '🙂' }}</span>
+        <span class="text-sm text-gray-300 truncate">{{ c.notes or '—' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+async function updateProgress(id, value) {
+  document.getElementById(`pct-${id}`).textContent = value + '%';
+  const form = new FormData();
+  form.append('progress', value);
+  await fetch(`/api/goals/${id}/progress`, { method: 'POST', body: form });
+}
+</script>
+{% endblock %}
