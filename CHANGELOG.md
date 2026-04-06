@@ -2,6 +2,21 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-04-06
+### Added
+- Product OS web section: `/product` — cluster cards with PRD listings and status badges
+- PRD detail view: `/product/prd/{id}` — all 8 PRD sections with inline editing
+- Live command terminal on each PRD: type natural language commands, Claude updates sections in real-time
+- Comment/note thread on each PRD with user and Claude entries (color-coded by author and type)
+- `prd-builder` skill at `~/.claude/skills/prd-builder/` — clusters backlog ideas + generates PRDs end-to-end
+- 3 new SQLite tables: `idea_clusters`, `prds`, `prd_comments`
+- 9 new DAL functions in `store/database.py` for Product OS
+- `web/routers/product.py` with 5 routes (list, detail, comment, command, status)
+### Changed
+- `web/app.py` — registered product router
+- `web/templates/base.html` — added "Product OS" nav link
+- `memory/learnings.md` — added L-013 (Telegram Markdown fallback) and L-014 (launchd duplicate processes)
+
 ## [0.6.1] — 2026-04-06
 ### Added
 - macOS launchd services: `com.yos.bot` and `com.yos.scheduler` auto-start on login/boot with KeepAlive restart

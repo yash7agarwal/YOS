@@ -123,6 +123,33 @@ def run_daily():
 
 ---
 
+## L-013 — Telegram Markdown parse errors from email content
+
+**What happened:** GmailOrg daily digest failed with `Can't parse entities: can't find end of the entity starting at byte offset 444`. Email subjects/senders containing `_` or `*` characters (e.g. sender names) broke Telegram's Markdown parser.
+
+**Fix:** Wrap the Markdown send in a try/except and fall back to plain text by stripping `*`, `_`, `` ` `` before retrying:
+```python
+try:
+    await bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
+except Exception:
+    plain = message.replace("*", "").replace("_", "").replace("`", "")
+    await bot.send_message(chat_id=chat_id, text=plain)
+```
+
+**Prevent:** Any Telegram message containing user-generated content (email subjects, sender names) must have a plain-text fallback. Never trust external content to be Markdown-safe.
+
+---
+
+## L-014 — launchd KeepAlive causes duplicate processes if old nohup instances exist
+
+**What happened:** When launchd services were loaded while nohup processes from a previous session were still running, two bot instances polled the same Telegram token simultaneously → 409 Conflict.
+
+**Fix:** Before loading launchd services, kill all existing instances: `pkill -f "bot.main"`, `pkill -f "scheduler.main"`. Then load launchd. Going forward, launchd is the only process manager — never start processes with nohup alongside launchd services.
+
+**Prevent:** Add a pre-load kill step to any setup/restart procedure. Document that nohup must never be used alongside launchd for the same module.
+
+---
+
 ## L-012 — APScheduler timezone must be explicit for IST
 
 **What happened:** Scheduler fired at wrong local time when timezone was not specified. Default is UTC; IST is UTC+5:30.

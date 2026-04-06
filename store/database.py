@@ -170,6 +170,45 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_health_date     ON health_logs (log_date DESC);
         CREATE INDEX IF NOT EXISTS idx_briefings_date  ON briefings (date DESC);
         CREATE INDEX IF NOT EXISTS idx_evals_agent     ON evaluations (agent, evaluated_at DESC);
+
+        -- ── PRODUCT OS ───────────────────────────────────────────────
+        CREATE TABLE IF NOT EXISTS idea_clusters (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            name        TEXT NOT NULL,
+            description TEXT,
+            idea_ids    TEXT NOT NULL,
+            created_at  TEXT NOT NULL,
+            updated_at  TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS prds (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            cluster_id      INTEGER,
+            title           TEXT NOT NULL,
+            status          TEXT DEFAULT 'draft',
+            overview        TEXT,
+            problem         TEXT,
+            goals           TEXT,
+            non_goals       TEXT,
+            user_stories    TEXT,
+            requirements    TEXT,
+            success_metrics TEXT,
+            open_questions  TEXT,
+            created_at      TEXT NOT NULL,
+            updated_at      TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS prd_comments (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            prd_id      INTEGER NOT NULL,
+            author      TEXT DEFAULT 'user',
+            type        TEXT DEFAULT 'comment',
+            content     TEXT NOT NULL,
+            created_at  TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_prds_cluster   ON prds (cluster_id, status);
+        CREATE INDEX IF NOT EXISTS idx_prd_comments   ON prd_comments (prd_id, created_at);
         """)
     print(f"YOS database initialized at {DB_PATH}")
 
@@ -508,4 +547,96 @@ def get_evaluation_summary(agent: str | None = None, days: int = 30) -> list[dic
                 "SELECT * FROM evaluations WHERE evaluated_at >= ? ORDER BY evaluated_at DESC",
                 (since,),
             ).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ── PRODUCT OS ────────────────────────────────────────────────────────────────
+
+def save_cluster(name: str, description: str, idea_ids: list) -> int:
+    import json as _json
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO idea_clusters (name, description, idea_ids, created_at, updated_at) VALUES (?,?,?,?,?)",
+            (name, description, _json.dumps(idea_ids), now, now),
+        )
+        return cur.lastrowid
+
+
+def get_clusters() -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute("SELECT * FROM idea_clusters ORDER BY created_at DESC").fetchall()
+    return [dict(r) for r in rows]
+
+
+def save_prd(cluster_id: int | None, title: str, overview: str = "", problem: str = "",
+             goals: str = "", non_goals: str = "", user_stories: str = "",
+             requirements: str = "", success_metrics: str = "", open_questions: str = "") -> int:
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO prds
+               (cluster_id, title, overview, problem, goals, non_goals, user_stories,
+                requirements, success_metrics, open_questions, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (cluster_id, title, overview, problem, goals, non_goals, user_stories,
+             requirements, success_metrics, open_questions, now, now),
+        )
+        return cur.lastrowid
+
+
+def get_prd(prd_id: int) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM prds WHERE id=?", (prd_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def get_all_prds() -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute("SELECT * FROM prds ORDER BY created_at DESC").fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_prds_for_cluster(cluster_id: int) -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM prds WHERE cluster_id=? ORDER BY created_at DESC", (cluster_id,)
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def update_prd_section(prd_id: int, field: str, value: str) -> None:
+    allowed = {"overview", "problem", "goals", "non_goals", "user_stories",
+               "requirements", "success_metrics", "open_questions", "title"}
+    if field not in allowed:
+        return
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(f"UPDATE prds SET {field}=?, updated_at=? WHERE id=?", (value, now, prd_id))
+
+
+def update_prd_status(prd_id: int, status: str) -> None:
+    allowed = {"draft", "active", "shipped", "archived"}
+    if status not in allowed:
+        return
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute("UPDATE prds SET status=?, updated_at=? WHERE id=?", (status, now, prd_id))
+
+
+def add_prd_comment(prd_id: int, author: str, comment_type: str, content: str) -> int:
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO prd_comments (prd_id, author, type, content, created_at) VALUES (?,?,?,?,?)",
+            (prd_id, author, comment_type, content, now),
+        )
+        return cur.lastrowid
+
+
+def get_prd_comments(prd_id: int) -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM prd_comments WHERE prd_id=? ORDER BY created_at ASC", (prd_id,)
+        ).fetchall()
     return [dict(r) for r in rows]

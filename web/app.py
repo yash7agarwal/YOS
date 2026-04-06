@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
 from store.database import init_db
-from web.routers import backlog, goals, intel, career
+from web.routers import backlog, goals, intel, career, product
 
 load_dotenv()
 
@@ -25,6 +25,7 @@ app.include_router(backlog.router)
 app.include_router(goals.router)
 app.include_router(intel.router)
 app.include_router(career.router)
+app.include_router(product.router)
 
 
 @app.on_event("startup")
