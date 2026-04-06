@@ -2,6 +2,11 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] — 2026-04-06
+### Added
+- macOS launchd services: `com.yos.bot` and `com.yos.scheduler` auto-start on login/boot with KeepAlive restart
+- Backlog idea #3: VPS cloud deployment for 24/7 operation (logged via /idea)
+
 ## [0.6.0] — 2026-04-06
 ### Added
 - AOS rework: `memory/` layer with learnings.md, patterns.md, decisions.md, user_context.md — populated from full build session

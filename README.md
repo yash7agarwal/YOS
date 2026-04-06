@@ -1,4 +1,4 @@
-# YOS — Agent Operating System · v0.6.0
+# YOS — Agent Operating System · v0.6.1
 
 > A compounding personal intelligence system: captures ideas, tracks goals, runs daily intelligence agents, monitors career, and delivers everything through Telegram — getting smarter after every task.
 
@@ -12,11 +12,11 @@ YOS is built on the AOS (Agent Operating System) philosophy: not a task executor
 - **Idea & Backlog Management** — capture ideas via `/idea`, view a prioritized backlog, score ideas with Claude AI scoring
 - **Goal Tracking** — set and track daily, weekly, quarterly, and yearly goals with progress bars and check-ins
 - **Journal / Moment Capture** — `/note` records wins, learnings, and reflections with auto-category detection
-- **Career Intelligence** — job scanner matches against your profile, `/jobs`, `/resume`, `/skills` commands
+- **Career Intelligence** — job scanner matches against your profile; `/jobs`, `/resume`, `/skills` commands
 - **Health Gap Detection** — log sleep, energy, stress; morning briefing includes a nudge if you've missed a day
 - **Deep Research Agents** — multi-turn Claude Opus agents for weekly analysis, monthly reporting, and backlog curation
-- **Compounding Memory** — every run is self-evaluated (Correctness/Efficiency/Reusability/Clarity 1-5) and stored; patterns, decisions, and learnings persist across conversations
-- **Gmail Integration** — pulls must-read emails, recent charges, and renewal alerts from GmailOrganization's DB
+- **Compounding Memory** — every run is self-evaluated (Correctness/Efficiency/Reusability/Clarity 1–5); patterns, decisions, and learnings persist across conversations
+- **Auto-start on boot** — macOS launchd services keep bot and scheduler alive across reboots and crashes
 
 ---
 
@@ -39,7 +39,7 @@ bot/dispatcher.py ──► bot/commands/*.py
         ├── utils/telegram.py
         └── integrations/gmail.py   (read-only GmailOrg DB)
 
-scheduler/main.py (APScheduler, Asia/Kolkata)
+scheduler/main.py (APScheduler, Asia/Kolkata) — auto-started by launchd
         ├── 07:00 daily   → agents → briefing → Telegram
         ├── Mon 08:15     → weekly_analyst (Opus, multi-turn)
         ├── 1st 09:00     → monthly_reporter (Opus, multi-turn)
@@ -87,10 +87,10 @@ YOS/
 │   └── claude/
 │       ├── runner.py          # Generic Opus tool-use loop + self-eval
 │       ├── tools.py           # 7 tools: web_search, fetch_url, query_yos_db, etc.
-│       ├── backlog_curator.py # Deep backlog curation agent
-│       ├── weekly_analyst.py  # Weekly synthesis agent
-│       ├── monthly_reporter.py# Monthly OS report agent
-│       └── system_health.py   # Process health + auto-restart
+│       ├── backlog_curator.py
+│       ├── weekly_analyst.py
+│       ├── monthly_reporter.py
+│       └── system_health.py
 │
 ├── intelligence/
 │   └── briefing.py            # Compose + save + send daily briefing
@@ -139,22 +139,18 @@ YOS/
    python3 -c "from store.database import init_db; init_db()"
    ```
 
-4. **Start the bot**
+4. **Register launchd services** (auto-start on login/boot)
    ```bash
-   nohup python3 -m bot.main > logs/daily/bot.log 2>&1 &
+   launchctl load ~/Library/LaunchAgents/com.yos.bot.plist
+   launchctl load ~/Library/LaunchAgents/com.yos.scheduler.plist
    ```
 
-5. **Start the scheduler** (daily briefing at 07:00 IST)
-   ```bash
-   nohup python3 -m scheduler.main > logs/daily/scheduler.log 2>&1 &
-   ```
-
-6. **Trigger a manual briefing**
+5. **Trigger a manual briefing**
    ```bash
    python3 -m scheduler.main --now
    ```
 
-7. **Start the web dashboard** (optional)
+6. **Start the web dashboard** (optional)
    ```bash
    nohup python3 -m web.app > logs/daily/web.log 2>&1 &
    # Open http://localhost:8000
@@ -199,56 +195,27 @@ Message `@YOperatingSystem_BOT` on Telegram:
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Claude API key | console.anthropic.com |
 | `TELEGRAM_BOT_TOKEN` | YOS bot token | @BotFather → `/newbot` |
-| `TELEGRAM_CHAT_ID` | Your personal chat ID | Send any message to bot → `getUpdates` |
+| `TELEGRAM_CHAT_ID` | Your personal chat ID | Send any message → `getUpdates` |
 | `DB_PATH` | SQLite database path | Default: `db/yos.db` |
 | `GMAIL_ORG_DB_PATH` | Path to GmailOrganization DB | Default: `../GmailOrganization/learning/db/gmail_org.db` |
 
 ---
 
-## AOS Compounding Loop
+## Changelog
 
-After every meaningful agent run:
-
-1. Output is self-evaluated on 4 dimensions (1-5): Correctness, Efficiency, Reusability, Clarity
-2. Scores saved to `evaluations` table for trend analysis
-3. Patterns extracted to `memory/patterns.md`
-4. Learnings stored in `memory/learnings.md`
-5. Workflows updated when a better method is discovered
-
-The system improves its decision quality over time, not just completes tasks.
-
----
-
-## Recent Changes
-
-- `2026-04-06` — AOS rework: memory/, workflows/, tools/ layers; evaluations table; self-eval in runner
-- `2026-04-06` — Add semantic versioning: VERSION, CHANGELOG.md, v0.5.0
-- `2026-04-06` — Add Claude multi-step agents for deep research and system health
-- `2026-04-06` — Implement Phase 3-5: career scanner, health alerts, and web dashboard
-- `2026-04-06` — Implement Phase 2: Intelligence agents, daily briefing, and Gmail integration
+- `v0.6.1` — macOS launchd auto-start services; backlog idea for VPS deployment
+- `v0.6.0` — AOS rework: memory/, workflows/, tools/ layers; evaluations table; self-eval in runner
+- `v0.5.0` — Claude multi-step agents (weekly analyst, monthly reporter, backlog curator, system health)
+- `v0.4.0` — Career scanner, FastAPI web dashboard, health gap detection
+- `v0.3.0` — Intelligence agents (tech/biz/geo), daily briefing, Gmail integration
 
 ---
 
 ## Roadmap
 
-- Monthly spend report — total by merchant and category pulled from GmailOrg
-- FastAPI web dashboard Phase 2 — Kanban backlog, briefing history timeline
+- **VPS deployment** — Dockerfile + systemd services for 24/7 cloud operation (backlog #3)
+- Monthly spend report pulled from GmailOrg
 - Resume auto-update — extract skills from `/note` and `/idea` entries
-- Monthly OS report surfaced in Telegram as structured digest
+- Evaluation trend dashboard — `/syshealth` shows avg agent scores over time
 - GmailOrg deeper integration — AI tool discoveries → YOS knowledge base
-- Evaluation trend dashboard — /syshealth shows avg scores per agent over time
-- Cross-device sync (multiple machines reading same DB via sync tool)
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| AI | Claude claude-sonnet-4-6 (default) + claude-opus-4-6 (deep agents) |
-| Notifications | Telegram Bot API (`python-telegram-bot` v20+) |
-| Storage | SQLite + WAL (`store/database.py`, 14 tables) |
-| Scheduling | APScheduler (CronTrigger, Asia/Kolkata) |
-| Web UI | FastAPI + Jinja2 + Tailwind CDN |
-| Feed ingestion | feedparser |
-| Language | Python 3.9+ |
+- Cross-device sync (multiple machines sharing DB)
