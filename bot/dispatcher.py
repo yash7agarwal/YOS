@@ -16,6 +16,7 @@ from bot.commands.health import cmd_health, cmd_healthlog
 from bot.commands.today import cmd_today
 from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents, cmd_weekly, cmd_monthly, cmd_health
 from bot.commands.career import cmd_jobs, cmd_apply, cmd_skills, cmd_skill, cmd_resume
+from bot.commands.domain import cmd_agent, cmd_ask, cmd_reset_agent
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -75,7 +76,12 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "`/geo` — geopolitics\n"
         "`/run` — trigger agents now\n\n"
         "📋 *Dashboard*\n"
-        "`/today` — daily overview",
+        "`/today` — daily overview\n\n"
+        "🤖 *Domain Agents*\n"
+        "`/agent` — show active agent\n"
+        "`/agent <name>` — switch agent (finance|product|strategy|research|contrarian|creative)\n"
+        "`/ask <message>` — query active agent\n"
+        "`/reset` — clear conversation history",
         parse_mode="Markdown",
     )
 
@@ -126,5 +132,11 @@ def register(app: Application) -> None:
     app.add_handler(CommandHandler("weekly", wrap(cmd_weekly)))
     app.add_handler(CommandHandler("monthly", wrap(cmd_monthly)))
     app.add_handler(CommandHandler("syshealth", wrap(cmd_health)))
+
+    # Domain agents
+    app.add_handler(CommandHandler("agent",  wrap(cmd_agent)))
+    app.add_handler(CommandHandler("agents", wrap(cmd_agent)))
+    app.add_handler(CommandHandler("ask",    wrap(cmd_ask)))
+    app.add_handler(CommandHandler("reset",  wrap(cmd_reset_agent)))
 
     logger.info("All command handlers registered.")

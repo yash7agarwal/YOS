@@ -3,6 +3,26 @@
 {% block nav_product %}active{% endblock %}
 
 {% block content %}
+
+{% macro _prd_card(prd) %}
+<a href="/product/prd/{{ prd.id }}" class="block card hover:border-blue-600 hover:bg-gray-750 transition-all cursor-pointer group">
+  <div class="flex items-start justify-between gap-2 mb-2">
+    <h3 class="font-medium text-white text-sm leading-snug group-hover:text-blue-400 transition-colors">{{ prd.title }}</h3>
+    <span class="shrink-0 text-xs rounded-full px-2 py-0.5 font-medium
+      {% if prd.status == 'active' %}bg-green-900 text-green-300
+      {% elif prd.status == 'shipped' %}bg-blue-900 text-blue-300
+      {% elif prd.status == 'archived' %}bg-gray-700 text-gray-400
+      {% else %}bg-yellow-900 text-yellow-300{% endif %}">
+      {{ prd.status }}
+    </span>
+  </div>
+  {% if prd.overview %}
+  <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">{{ prd.overview[:150] }}{% if prd.overview|length > 150 %}…{% endif %}</p>
+  {% endif %}
+  <p class="text-xs text-gray-600 mt-3">{{ prd.updated_at[:10] }}</p>
+</a>
+{% endmacro %}
+
 <div class="max-w-6xl mx-auto">
 
   <!-- Header -->
@@ -68,23 +88,4 @@
 
   {% endif %}
 </div>
-
-{% macro _prd_card(prd) %}
-<a href="/product/prd/{{ prd.id }}" class="block card hover:border-blue-600 hover:bg-gray-750 transition-all cursor-pointer group">
-  <div class="flex items-start justify-between gap-2 mb-2">
-    <h3 class="font-medium text-white text-sm leading-snug group-hover:text-blue-400 transition-colors">{{ prd.title }}</h3>
-    <span class="shrink-0 text-xs rounded-full px-2 py-0.5 font-medium
-      {% if prd.status == 'active' %}bg-green-900 text-green-300
-      {% elif prd.status == 'shipped' %}bg-blue-900 text-blue-300
-      {% elif prd.status == 'archived' %}bg-gray-700 text-gray-400
-      {% else %}bg-yellow-900 text-yellow-300{% endif %}">
-      {{ prd.status }}
-    </span>
-  </div>
-  {% if prd.overview %}
-  <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">{{ prd.overview[:150] }}{% if prd.overview|length > 150 %}…{% endif %}</p>
-  {% endif %}
-  <p class="text-xs text-gray-600 mt-3">{{ prd.updated_at[:10] }}</p>
-</a>
-{% endmacro %}
 {% endblock %}

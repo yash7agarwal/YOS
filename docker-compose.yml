@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    command: python3 -m bot.main
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    restart: always
+    depends_on:
+      - ollama
+
+  scheduler:
+    build: .
+    command: python3 -m scheduler.main
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    restart: always
+
+  web:
+    build: .
+    command: python3 -m web.app
+    env_file: .env
+    volumes:
+      - ./db:/app/db
+    ports:
+      - "8000:8000"
+    restart: always
+
+  # Optional: local Gemma 4 inference via Ollama
+  # Set INFERENCE_MODE=local in .env to use
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    profiles:
+      - local  # only starts with: docker-compose --profile local up
+
+volumes:
+  ollama_data:

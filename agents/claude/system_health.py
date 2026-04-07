@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 """
-System Health Agent
+System Health Agent — launchd-aware
 
-Runs every 6 hours. Checks all YOS processes are alive and restarts them if dead.
-Sends alert to Telegram if anything needs attention.
+Checks all YOS launchd services are alive via `launchctl list`.
+Restarts dead services with `launchctl kickstart`.
+Sends a Telegram alert if anything needed attention.
 """
 
 import os
 import subprocess
 from datetime import datetime
-from pathlib import Path
 
 from utils.telegram import send_message
 from utils.logger import get_logger
@@ -20,98 +20,83 @@ load_dotenv()
 
 logger = get_logger(__name__)
 
-YOS_DIR = Path(__file__).parent.parent.parent
-PID_DIR = YOS_DIR / "logs"
+UID = os.getuid()
 
-PROCESSES = {
-    "bot": {
-        "pid_file": "logs/bot.pid",
-        "cmd": ["python3", "-m", "bot.main"],
-        "log": "logs/daily/bot.log",
-    },
-    "scheduler": {
-        "pid_file": "logs/scheduler.pid",
-        "cmd": ["python3", "-m", "scheduler.main"],
-        "log": "logs/daily/scheduler.log",
-    },
-    "web": {
-        "pid_file": "logs/web.pid",
-        "cmd": ["python3", "-m", "web.app"],
-        "log": "logs/daily/web.log",
-    },
+# launchd service name → human label
+SERVICES = {
+    "com.yos.bot":       "YOS Bot",
+    "com.yos.scheduler": "YOS Scheduler",
+    "com.yos.web":       "YOS Web",
 }
 
 
-def _is_running(pid: int) -> bool:
+def _launchd_pid(service: str) -> int | None:
+    """Return the PID of a running launchd service, or None if not running."""
     try:
-        os.kill(pid, 0)
-        return True
-    except (ProcessLookupError, PermissionError):
-        return False
-
-
-def _read_pid(pid_file: str) -> int | None:
-    path = YOS_DIR / pid_file
-    if path.exists():
-        try:
-            return int(path.read_text().strip())
-        except ValueError:
-            return None
+        out = subprocess.check_output(
+            ["launchctl", "list", service],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        for line in out.splitlines():
+            line = line.strip().strip('"').rstrip(';').strip()
+            if line.startswith('"PID"') or line.startswith('PID'):
+                # Format: "PID" = 12345;
+                pid_str = line.split('=')[-1].strip().rstrip(';').strip().strip('"')
+                return int(pid_str)
+    except (subprocess.CalledProcessError, ValueError):
+        pass
     return None
 
 
-def _write_pid(pid_file: str, pid: int) -> None:
-    (YOS_DIR / pid_file).write_text(str(pid))
-
-
-def _start_process(name: str, config: dict) -> int:
-    log_path = YOS_DIR / config["log"]
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(log_path, "a") as log_f:
-        proc = subprocess.Popen(
-            config["cmd"],
-            cwd=str(YOS_DIR),
-            stdout=log_f,
-            stderr=log_f,
-            start_new_session=True,
+def _kickstart(service: str) -> bool:
+    """Restart a launchd service. Returns True on success."""
+    try:
+        subprocess.check_call(
+            ["launchctl", "kickstart", "-k", f"gui/{UID}/{service}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-    _write_pid(config["pid_file"], proc.pid)
-    logger.info(f"[health] Started {name} (PID {proc.pid})")
-    return proc.pid
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 
 def run() -> dict:
-    """Check all processes, restart dead ones. Returns status report."""
+    """Check all launchd services, restart dead ones. Returns status report."""
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     status = {}
     restarted = []
-    already_running = []
+    healthy = []
 
-    for name, config in PROCESSES.items():
-        pid = _read_pid(config["pid_file"])
-        if pid and _is_running(pid):
-            status[name] = f"✅ running (PID {pid})"
-            already_running.append(name)
+    for service, label in SERVICES.items():
+        pid = _launchd_pid(service)
+        if pid:
+            status[service] = f"✅ running (PID {pid})"
+            healthy.append(label)
+            logger.info(f"[health] {label}: OK (PID {pid})")
         else:
-            logger.warning(f"[health] {name} is DOWN — restarting…")
-            try:
-                new_pid = _start_process(name, config)
-                status[name] = f"🔄 restarted (PID {new_pid})"
-                restarted.append(name)
-            except Exception as e:
-                status[name] = f"❌ failed to restart: {e}"
-                logger.error(f"[health] Failed to restart {name}: {e}")
+            logger.warning(f"[health] {label} is DOWN — restarting via launchd…")
+            ok = _kickstart(service)
+            if ok:
+                new_pid = _launchd_pid(service)
+                status[service] = f"🔄 restarted (PID {new_pid or '?'})"
+                restarted.append(label)
+                logger.info(f"[health] Restarted {label} (PID {new_pid})")
+            else:
+                status[service] = f"❌ failed to restart"
+                logger.error(f"[health] Failed to restart {label}")
 
     if restarted:
-        lines = [f"⚠️ *YOS Health Alert — {now}*\n"]
-        for name in restarted:
-            lines.append(f"🔄 Restarted: *{name}* — {status[name]}")
-        for name in already_running:
-            lines.append(f"✅ OK: {name}")
+        lines = [f"⚠️ YOS Health Alert — {now}\n"]
+        for label in restarted:
+            lines.append(f"🔄 Restarted: {label}")
+        for label in healthy:
+            lines.append(f"✅ OK: {label}")
         send_message("\n".join(lines))
-        logger.info(f"[health] Restarted: {restarted}")
+        logger.info(f"[health] Restarted services: {restarted}")
     else:
-        logger.info(f"[health] All processes healthy: {list(status.keys())}")
+        logger.info(f"[health] All services healthy.")
 
     return status
 

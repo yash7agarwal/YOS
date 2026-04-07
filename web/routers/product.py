@@ -114,57 +114,69 @@ async def execute_command(prd_id: int, command: str = Form(...)):
     context_lines = [f"[{c['author'].upper()}] {c['content'][:300]}" for c in recent]
     context_text = "\n".join(context_lines) if context_lines else "No prior context."
 
-    prompt = f"""You are a product OS assistant. The user has issued a development command on this PRD.
+    # --- Call 1: short JSON — response text + routing decision (no update_value) ---
+    routing_prompt = f"""You are a product OS assistant. The user issued a command on this PRD.
 
 --- PRD ---
 {prd_text}
 
---- Recent conversation context ---
+--- Recent context ---
 {context_text}
 
 --- Command ---
 {command}
 
-Respond with ONLY valid JSON (no markdown, no explanation outside JSON):
-{{
-  "response": "<your reply — actionable, specific, max 400 chars>",
-  "update_field": "<one of: overview|problem|goals|non_goals|user_stories|requirements|success_metrics|open_questions|title — or null>",
-  "update_value": "<new full content for the field, or null>"
-}}
+Reply with ONLY this JSON (no markdown, no extra text):
+{{"response":"<your reply, max 300 chars>","update_field":"<one of: overview|problem|goals|non_goals|user_stories|requirements|success_metrics|open_questions|title — or null if no update needed>"}}
 
-Rules:
-- If the command asks to add/update/rewrite a section, set update_field + update_value
-- If the command is a question or analysis, set both to null and just respond
-- update_value should be the complete new content for that field (not a diff)
-- Be concise and decisive"""
+If the command asks to update/rewrite/add to a section, set update_field to that section name.
+If it's a question or analysis, set update_field to null."""
 
     try:
-        result = ask(prompt, max_tokens=2048)
-        # Strip possible markdown code fences
-        result = result.strip()
-        if result.startswith("```"):
-            result = result.split("```")[1]
-            if result.startswith("json"):
-                result = result[4:]
-        parsed = json.loads(result.strip())
+        r1 = ask(routing_prompt, max_tokens=512)
+        r1 = r1.strip()
+        start = r1.find("{")
+        end = r1.rfind("}")
+        if start != -1 and end != -1:
+            r1 = r1[start:end + 1]
+        parsed = json.loads(r1)
     except Exception as exc:
-        logger.warning("command parse failed: %s", exc)
-        parsed = {"response": "I processed your command but couldn't parse the response format. Please try again.", "update_field": None, "update_value": None}
+        logger.warning("routing parse failed: %s", exc)
+        parsed = {"response": "Sorry, I couldn't process that command. Please try again.", "update_field": None}
+
+    field = parsed.get("update_field") if parsed.get("update_field") != "null" else None
+    update_value = None
+
+    # --- Call 2 (only if update needed): generate the full section content ---
+    if field and field in PRD_SECTIONS + ["title"]:
+        update_prompt = f"""You are a product OS assistant rewriting a PRD section.
+
+PRD Title: {prd.get('title', '')}
+Section to rewrite: {field}
+Current content: {prd.get(field, '(empty)')}
+User command: {command}
+
+Write ONLY the new content for the "{field}" section — plain text, no JSON, no section header.
+Be specific and concrete. Reflect the command exactly."""
+        try:
+            update_value = ask(update_prompt, max_tokens=1024).strip()
+        except Exception as exc:
+            logger.warning("update generation failed: %s", exc)
+            update_value = None
+            field = None
 
     # Save command + response to thread
     add_prd_comment(prd_id, "user", "command", command)
     add_prd_comment(prd_id, "claude", "response", parsed.get("response", ""))
 
-    # Apply PRD update if requested
-    field = parsed.get("update_field")
-    value = parsed.get("update_value")
-    if field and value:
-        update_prd_section(prd_id, field, value)
+    # Apply PRD update if we have content
+    if field and update_value:
+        update_prd_section(prd_id, field, update_value)
         add_prd_comment(prd_id, "claude", "update", f"Updated section: {field.replace('_', ' ').title()}")
 
     return JSONResponse({
         "response": parsed.get("response", ""),
-        "updated": field if field and value else None,
+        "updated": field if field and update_value else None,
     })
 
 

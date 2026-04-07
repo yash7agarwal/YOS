@@ -209,6 +209,14 @@ def init_db() -> None:
 
         CREATE INDEX IF NOT EXISTS idx_prds_cluster   ON prds (cluster_id, status);
         CREATE INDEX IF NOT EXISTS idx_prd_comments   ON prd_comments (prd_id, created_at);
+
+        -- ── DOMAIN AGENT STATE ───────────────────────────────────────
+        CREATE TABLE IF NOT EXISTS user_agent_state (
+            id           INTEGER PRIMARY KEY DEFAULT 1,
+            agent_name   TEXT NOT NULL DEFAULT 'product',
+            conversation TEXT NOT NULL DEFAULT '[]',
+            updated_at   TEXT NOT NULL
+        );
         """)
     print(f"YOS database initialized at {DB_PATH}")
 
@@ -640,3 +648,54 @@ def get_prd_comments(prd_id: int) -> list[dict]:
             "SELECT * FROM prd_comments WHERE prd_id=? ORDER BY created_at ASC", (prd_id,)
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ── DOMAIN AGENT STATE ────────────────────────────────────────────────────────
+
+def get_agent_state() -> dict:
+    """Return {agent_name, conversation} for the single-user session."""
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM user_agent_state WHERE id=1").fetchone()
+        if not row:
+            conn.execute(
+                "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,'product','[]',?)",
+                (now,),
+            )
+            return {"agent_name": "product", "conversation": []}
+        return {"agent_name": row["agent_name"], "conversation": json.loads(row["conversation"])}
+
+
+def set_agent(name: str) -> None:
+    """Switch active agent and clear conversation history."""
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET agent_name=excluded.agent_name, conversation='[]', updated_at=excluded.updated_at",
+            (name, "[]", now),
+        )
+
+
+def append_agent_message(role: str, content: str) -> None:
+    """Append a message to conversation history, keeping last 10 exchanges."""
+    now = datetime.utcnow().isoformat()
+    state = get_agent_state()
+    history = state["conversation"]
+    history.append({"role": role, "content": content})
+    history = history[-20:]  # keep last 20 turns (10 exchanges)
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET conversation=excluded.conversation, updated_at=excluded.updated_at",
+            (state["agent_name"], json.dumps(history), now),
+        )
+
+
+def clear_agent_conversation() -> None:
+    """Reset conversation history for the current agent."""
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE user_agent_state SET conversation='[]', updated_at=? WHERE id=1", (now,)
+        )

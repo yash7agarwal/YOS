@@ -2,6 +2,21 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-04-07
+### Added
+- 6 domain agents (Finance, Product, Strategy, Research, Contrarian, Creative) in `agents/domain/`
+- `/agent`, `/ask`, `/reset` Telegram commands for conversational domain agent switching
+- `user_agent_state` SQLite table with persistent conversation history (last 20 turns)
+- `ask_local()` and `ask_auto()` in `utils/claude_client.py` for Ollama/Gemma 4 local inference
+- `Dockerfile` and `docker-compose.yml` for VPS containerised deployment
+- Fixed Jinja2 macro ordering bug in `product.html` and `prd_detail.html` (macros must precede use)
+- Fixed PRD command terminal JSON truncation: two-call approach (routing + content generation)
+- Rewrote `system_health.py` to be launchd-aware (uses `launchctl list/kickstart`, no PID files)
+### Changed
+- `store/database.py` — added `user_agent_state` table + 4 DAL functions
+- `bot/dispatcher.py` — registered domain agent command handlers
+- `.env.example` — added `INFERENCE_MODE` and `OLLAMA_HOST` vars
+
 ## [0.7.0] — 2026-04-06
 ### Added
 - Product OS web section: `/product` — cluster cards with PRD listings and status badges
