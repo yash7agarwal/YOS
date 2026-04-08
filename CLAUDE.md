@@ -448,6 +448,63 @@ Rules:
 
 ---
 
+## Context Window Preservation — Mandatory Subagent Delegation
+
+**The main session context window is a finite, non-renewable resource within a conversation. Protect it ruthlessly.**
+
+Every task must be evaluated for whether it can be delegated to a subagent. The default assumption is: **delegate unless there is a clear reason not to.**
+
+### What MUST be delegated to subagents
+
+- File reading, exploration, and research (browsing codebases, reading docs, scanning directories)
+- Web research and URL content extraction
+- Data processing, transformation, and formatting
+- Code generation and file creation
+- Running commands and inspecting output
+- Testing, validation, and verification
+- Any self-contained subtask that does not require iterative back-and-forth with the user
+- Batch operations and repetitive work
+- Any task where the detailed intermediate output is not needed in the main session
+
+### What stays in the main session
+
+- High-level orchestration and task decomposition
+- User-facing communication and clarification questions
+- Final synthesis and summary of subagent results
+- Decisions that require user input or approval
+- Coordinating dependencies between multiple subagent outputs
+- Updating artifacts (plans, tasks, walkthroughs) based on subagent findings
+
+### Rules
+
+1. **Always delegate first.** Before doing any work directly, ask: "Can a subagent do this?" If yes, delegate it.
+2. **Be specific in subagent prompts.** Give subagents all necessary context, exact file paths, clear success criteria, and explicit instructions on what to return. The subagent has no memory of the main session — the prompt IS the entire context.
+3. **Request only what you need back.** Tell subagents to return concise, structured results — not raw dumps. Specify exactly what information to include in the final report.
+4. **Chain subagents when needed.** If a complex task has independent subtasks, launch multiple subagents in parallel. If subtasks are sequential, chain them by passing prior results into the next subagent's prompt.
+5. **Never read large files directly in the main session.** Always delegate file reading to a subagent and ask it to return only the relevant sections or a summary.
+6. **Never run exploratory commands in the main session.** Delegate exploration to a subagent, then use the results for decision-making.
+7. **Treat the main session as the executive brain.** It should think, decide, and coordinate — not grind through raw data or boilerplate work.
+
+### Anti-patterns (never do these in the main session)
+
+- Reading entire files to understand their structure
+- Running `find`, `grep`, or `ls` to explore a codebase
+- Processing or transforming data inline
+- Writing large blocks of code directly
+- Running tests and reading verbose output
+- Browsing the web and parsing results
+
+### Subagent prompt template
+
+When delegating, structure the prompt with:
+1. **Context**: What the task is about and why
+2. **Specific instructions**: Exact steps to perform
+3. **File paths / URLs**: All resources the subagent needs
+4. **Return format**: Exactly what to include in the final report
+5. **Success criteria**: How to know the task is complete
+
+---
+
 ## Operating Rules
 
 - Do not reinvent known solutions without reason
@@ -455,6 +512,7 @@ Rules:
 - Do not treat repeated issues as isolated incidents
 - Do not optimize only for task completion
 - Always seek to make the next similar task easier, faster, and better
+- **Always delegate to subagents — the main session is for thinking, not grinding**
 
 ---
 

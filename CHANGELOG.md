@@ -2,6 +2,14 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.9.0] — 2026-04-09
+### Added
+- CLAUDE.md: Context Window Preservation section — mandatory subagent delegation protocol with rules, anti-patterns, and prompt template
+- `.claude/agents/premium-experience-curator.md` — new domain agent for premium experience curation
+
+### Changed
+- CLAUDE.md: Strengthened operating rules with explicit subagent delegation as the default behavior
+
 ## [0.8.0] — 2026-04-07
 ### Added
 - 6 domain agents (Finance, Product, Strategy, Research, Contrarian, Creative) in `agents/domain/`
