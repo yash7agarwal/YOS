@@ -2,6 +2,10 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.9.1] — 2026-04-11
+### Added
+- `memory/issues_log.jsonl` — initialized for the cross-project self-healing system; receives eval pass/fail entries and known-issue patterns from `/post-task-eval` and `/self-heal` skills
+
 ## [0.9.0] — 2026-04-09
 ### Added
 - CLAUDE.md: Context Window Preservation section — mandatory subagent delegation protocol with rules, anti-patterns, and prompt template

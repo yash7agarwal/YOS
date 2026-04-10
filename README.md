@@ -1,4 +1,4 @@
-# YOS — Agent Operating System · v0.8.0
+# YOS — Agent Operating System · v0.9.1
 
 > A compounding personal intelligence system and product-building OS: captures ideas, generates PRDs, tracks goals, runs daily intelligence agents, and delivers everything through Telegram and a live web dashboard.
 
@@ -198,6 +198,8 @@ YOS/
 
 ## Changelog
 
+- `v0.9.1` — Initialize cross-project self-healing issues log
+- `v0.9.0` — Subagent delegation protocol in CLAUDE.md, premium experience curator agent
 - `v0.8.0` — 6 domain agents (/agent /ask /reset), Docker/VPS deployment, Ollama local inference, launchd-aware health check, PRD terminal fixes
 - `v0.7.0` — Product OS: prd-builder skill, /product web section, live PRD command terminal
 - `v0.6.1` — macOS launchd auto-start for all 3 YOS services
