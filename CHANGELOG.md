@@ -2,6 +2,23 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.9.2] — 2026-04-19 — Frontend design refresh + hardening
+
+### Added
+- `DESIGN.md` — formalizes the CSS variables system and visual rules adopted in this release.
+
+### Changed
+- `web/templates/base.html` — introduced CSS variables design system: Satoshi sans + JetBrains Mono, calibrated dark palette (`--bg`, `--surface-1/2`, `--border*`, `--text*`, `--accent`), cubic-bezier progress-bar easing. Replaces the ad-hoc "bg-gray-800 + Inter" styling.
+- `web/templates/backlog.html`, `career.html`, `goals.html`, `intel.html`, `prd_detail.html`, `product.html` — realigned to the new variables and typography.
+
+### Fixed
+- `bot/dispatcher.py` — stopped leaking raw exception text to Telegram users; replaced with a generic "check server logs for details" message.
+- `utils/claude_client.py` — `_get_client()` now raises a clear RuntimeError when `ANTHROPIC_API_KEY` is missing instead of cryptic KeyError.
+- `web/routers/backlog.py` — `POST /api/backlog/{id}/status` validates against the allowed set and returns 400 on invalid input.
+
+### Migration notes
+No schema or API contract changes. Upgrading is drop-in.
+
 ## [0.9.1] — 2026-04-11
 ### Added
 - `memory/issues_log.jsonl` — initialized for the cross-project self-healing system; receives eval pass/fail entries and known-issue patterns from `/post-task-eval` and `/self-heal` skills
