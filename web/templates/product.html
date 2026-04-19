@@ -5,21 +5,21 @@
 {% block content %}
 
 {% macro _prd_card(prd) %}
-<a href="/product/prd/{{ prd.id }}" class="block card hover:border-blue-600 hover:bg-gray-750 transition-all cursor-pointer group">
+<a href="/product/prd/{{ prd.id }}" class="block card hover:border-cyan-600/50 transition-all cursor-pointer group">
   <div class="flex items-start justify-between gap-2 mb-2">
-    <h3 class="font-medium text-white text-sm leading-snug group-hover:text-blue-400 transition-colors">{{ prd.title }}</h3>
+    <h3 class="font-medium text-white text-sm leading-snug group-hover:text-cyan-400 transition-colors">{{ prd.title }}</h3>
     <span class="shrink-0 text-xs rounded-full px-2 py-0.5 font-medium
       {% if prd.status == 'active' %}bg-green-900 text-green-300
-      {% elif prd.status == 'shipped' %}bg-blue-900 text-blue-300
-      {% elif prd.status == 'archived' %}bg-gray-700 text-gray-400
+      {% elif prd.status == 'shipped' %}bg-cyan-900 text-cyan-300
+      {% elif prd.status == 'archived' %}bg-slate-700 text-slate-400
       {% else %}bg-yellow-900 text-yellow-300{% endif %}">
       {{ prd.status }}
     </span>
   </div>
   {% if prd.overview %}
-  <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">{{ prd.overview[:150] }}{% if prd.overview|length > 150 %}…{% endif %}</p>
+  <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">{{ prd.overview[:150] }}{% if prd.overview|length > 150 %}...{% endif %}</p>
   {% endif %}
-  <p class="text-xs text-gray-600 mt-3">{{ prd.updated_at[:10] }}</p>
+  <p class="text-xs text-slate-600 mt-3">{{ prd.updated_at[:10] }}</p>
 </a>
 {% endmacro %}
 
@@ -28,21 +28,21 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-2xl font-bold text-white">🗂 Product OS</h1>
-      <p class="text-sm text-gray-400 mt-1">{{ total_prds }} PRD{{ 's' if total_prds != 1 else '' }} across {{ clusters|length }} cluster{{ 's' if clusters|length != 1 else '' }}</p>
+      <h1 class="text-2xl font-bold tracking-tight text-white">Product OS</h1>
+      <p class="text-sm text-slate-400 mt-1">{{ total_prds }} PRD{{ 's' if total_prds != 1 else '' }} across {{ clusters|length }} cluster{{ 's' if clusters|length != 1 else '' }}</p>
     </div>
-    <div class="text-sm text-gray-500 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2">
-      Run <code class="text-blue-400">cluster my backlog</code> in Claude Code to generate PRDs
+    <div class="text-sm text-slate-500 bg-slate-800 border border-slate-700/50 rounded-lg px-4 py-2">
+      Run <code class="text-cyan-400 font-mono">cluster my backlog</code> in Claude Code to generate PRDs
     </div>
   </div>
 
   {% if not clusters and not unclustered %}
   <!-- Empty state -->
-  <div class="card text-center py-16">
-    <p class="text-4xl mb-4">📭</p>
-    <p class="text-gray-300 text-lg font-medium mb-2">No PRDs yet</p>
-    <p class="text-gray-500 text-sm">Use the <span class="text-blue-400 font-mono">prd-builder</span> skill in Claude Code to cluster your backlog ideas and generate PRDs automatically.</p>
-    <p class="text-gray-600 text-xs mt-3">Trigger: "cluster my backlog" or "create PRDs from ideas"</p>
+  <div class="border border-dashed border-slate-700 rounded-2xl text-center py-16 px-10">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-slate-600 mb-4"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M2 8h20"/><path d="M10 4v4"/></svg>
+    <p class="text-slate-300 text-lg font-medium mb-2">No PRDs yet</p>
+    <p class="text-slate-500 text-sm">Use the <span class="text-cyan-400 font-mono">prd-builder</span> skill in Claude Code to cluster your backlog ideas and generate PRDs automatically.</p>
+    <p class="text-slate-600 text-xs mt-3">Trigger: "cluster my backlog" or "create PRDs from ideas"</p>
   </div>
 
   {% else %}
@@ -54,10 +54,10 @@
       <div>
         <h2 class="text-lg font-semibold text-white">{{ cluster.name }}</h2>
         {% if cluster.description %}
-        <p class="text-sm text-gray-400 mt-0.5">{{ cluster.description }}</p>
+        <p class="text-sm text-slate-400 mt-0.5">{{ cluster.description }}</p>
         {% endif %}
       </div>
-      <span class="ml-auto text-xs text-gray-500 bg-gray-800 border border-gray-700 rounded px-2 py-1 shrink-0">
+      <span class="ml-auto text-xs text-slate-500 bg-slate-700 border border-slate-600 rounded px-2 py-1 shrink-0">
         {{ cluster.idea_ids_list|length }} idea{{ 's' if cluster.idea_ids_list|length != 1 else '' }}
       </span>
     </div>
@@ -69,7 +69,7 @@
       {% endfor %}
     </div>
     {% else %}
-    <p class="text-sm text-gray-600 italic pl-1">No PRDs in this cluster yet.</p>
+    <p class="text-sm text-slate-600 italic pl-1">No PRDs in this cluster yet.</p>
     {% endif %}
   </div>
   {% endfor %}

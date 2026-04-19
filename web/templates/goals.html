@@ -5,22 +5,22 @@
 {% block content %}
 <div class="max-w-4xl mx-auto">
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-white">🎯 Goals</h2>
+    <h2 class="text-2xl font-bold tracking-tight text-white">Goals</h2>
   </div>
 
   <!-- Add goal form -->
   <form action="/api/goals/add" method="post" class="flex gap-3 mb-8">
-    <input name="title" placeholder="New goal…" required
-      class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+    <input name="title" placeholder="New goal..." required
+      class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"/>
     <select name="timeframe"
-      class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+      class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20">
       <option value="daily">Daily</option>
       <option value="weekly">Weekly</option>
       <option value="quarterly">Quarterly</option>
       <option value="yearly">Yearly</option>
     </select>
     <button type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg font-medium">
+      class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm px-5 py-2 rounded-lg font-medium transition-colors duration-150 active:scale-[0.98] active:translate-y-[1px]">
       + Add
     </button>
   </form>
@@ -29,25 +29,25 @@
   {% for tf in timeframes %}
   {% if grouped[tf] %}
   <div class="mb-8">
-    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-      {{ emoji[tf] }} {{ tf|capitalize }}
+    <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400 mb-3">
+      {{ tf|capitalize }}
     </h3>
     <div class="space-y-3">
       {% for g in grouped[tf] %}
-      <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
+      <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-4 hover:border-slate-600 transition-colors duration-200">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm text-white font-medium">{{ g.title }}</span>
-          <span class="text-xs font-mono text-gray-400">{{ g.progress }}%</span>
+          <span class="text-xs font-mono text-slate-400">{{ g.progress }}%</span>
         </div>
-        <div class="w-full bg-gray-700 rounded-full h-2 mb-3">
-          <div class="bg-blue-500 h-2 rounded-full progress-bar"
+        <div class="w-full bg-slate-700 rounded-full h-1.5 mb-3">
+          <div class="bg-cyan-500 h-1.5 rounded-full progress-bar"
                style="width: {{ g.progress }}%"></div>
         </div>
         <div class="flex items-center gap-2">
           <input type="range" min="0" max="100" value="{{ g.progress }}"
             onchange="updateProgress({{ g.id }}, this.value)"
-            class="flex-1 accent-blue-500 cursor-pointer"/>
-          <span id="pct-{{ g.id }}" class="text-xs text-gray-400 w-8 text-right">{{ g.progress }}%</span>
+            class="flex-1 accent-cyan-500 cursor-pointer"/>
+          <span id="pct-{{ g.id }}" class="text-xs text-slate-400 w-8 text-right">{{ g.progress }}%</span>
         </div>
       </div>
       {% endfor %}
@@ -59,13 +59,19 @@
   <!-- Recent Check-ins -->
   {% if checkins %}
   <div>
-    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Check-ins</h3>
+    <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400 mb-3">Recent Check-ins</h3>
     <div class="space-y-2">
       {% for c in checkins[:5] %}
-      <div class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 flex items-center gap-4">
-        <span class="text-xs text-gray-500 font-mono w-24 shrink-0">{{ c.checkin_date }}</span>
-        <span class="text-lg">{{ ['','😴','😐','🙂','😊','🔥'][c.mood|int] if c.mood else '🙂' }}</span>
-        <span class="text-sm text-gray-300 truncate">{{ c.notes or '—' }}</span>
+      <div class="bg-slate-800 border border-slate-700/50 rounded-2xl px-4 py-3 flex items-center gap-4">
+        <span class="text-xs text-slate-500 font-mono w-24 shrink-0">{{ c.checkin_date }}</span>
+        <span class="text-sm font-medium
+          {% if c.mood|int == 5 %}text-green-400
+          {% elif c.mood|int >= 3 %}text-cyan-400
+          {% elif c.mood|int == 2 %}text-slate-400
+          {% else %}text-slate-500{% endif %}">
+          {{ c.mood|int }}/5
+        </span>
+        <span class="text-sm text-slate-300 truncate">{{ c.notes or '---' }}</span>
       </div>
       {% endfor %}
     </div>

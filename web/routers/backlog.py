@@ -33,5 +33,7 @@ def add_idea_api(title: str = Form(...), description: str = Form("")):
 
 @router.post("/api/backlog/{idea_id}/status")
 def update_status_api(idea_id: int, status: str = Form(...)):
+    if status not in STATUSES:
+        return JSONResponse({"error": f"Invalid status. Must be one of: {STATUSES}"}, status_code=400)
     update_idea_status(idea_id, status)
     return JSONResponse({"ok": True})

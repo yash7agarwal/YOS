@@ -4,31 +4,87 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YOS — {% block title %}Dashboard{% endblock %}</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config = { darkMode: 'class' }</script>
   <style>
-    body { font-family: 'Inter', system-ui, sans-serif; }
-    .progress-bar { transition: width 0.3s ease; }
-    .card { @apply bg-gray-800 rounded-xl p-5 border border-gray-700; }
+    :root {
+      --bg: #0f172a;
+      --surface-1: #1e293b;
+      --surface-2: #334155;
+      --border: #475569;
+      --border-subtle: #334155;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --accent: #06b6d4;
+      --accent-hover: #0891b2;
+      --accent-subtle: rgba(6,182,212,0.1);
+      --success: #22c55e;
+      --warning: #eab308;
+      --error: #ef4444;
+      --info: #06b6d4;
+      --font-sans: 'Satoshi', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    }
+    body { font-family: var(--font-sans); }
+    .progress-bar {
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 999px;
+      height: 6px;
+    }
+    .card {
+      @apply bg-slate-800 rounded-2xl p-5 border border-slate-700/50;
+      transition: border-color 0.2s ease;
+    }
+    .card:hover {
+      border-color: var(--border);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    main > * {
+      animation: fadeIn 0.3s ease-out both;
+    }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-slate-900 text-slate-50 min-h-[100dvh]">
 
   <!-- Sidebar -->
-  <div class="flex h-screen overflow-hidden">
-    <aside class="w-56 bg-gray-900 border-r border-gray-800 flex flex-col py-6 px-4 shrink-0">
+  <div class="flex min-h-[100dvh] overflow-hidden">
+    <aside class="w-60 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/50 flex flex-col py-6 px-4 shrink-0">
       <div class="mb-8">
-        <h1 class="text-xl font-bold text-white">⚡ YOS</h1>
-        <p class="text-xs text-gray-500 mt-1">Personal AI OS</p>
+        <h1 class="text-xl font-bold text-white flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          YOS
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">Personal AI OS</p>
       </div>
       <nav class="space-y-1 flex-1">
-        <a href="/intel"   class="nav-link {% block nav_intel %}{% endblock %}">🧠 Intelligence</a>
-        <a href="/backlog" class="nav-link {% block nav_backlog %}{% endblock %}">📥 Backlog</a>
-        <a href="/goals"   class="nav-link {% block nav_goals %}{% endblock %}">🎯 Goals</a>
-        <a href="/career"  class="nav-link {% block nav_career %}{% endblock %}">💼 Career</a>
-        <a href="/product" class="nav-link {% block nav_product %}{% endblock %}">🗂 Product OS</a>
+        <a href="/intel"   class="nav-link {% block nav_intel %}{% endblock %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><path d="M10 21h4"/><path d="M12 17v-3"/></svg>
+          Intelligence
+        </a>
+        <a href="/backlog" class="nav-link {% block nav_backlog %}{% endblock %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          Backlog
+        </a>
+        <a href="/goals"   class="nav-link {% block nav_goals %}{% endblock %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+          Goals
+        </a>
+        <a href="/career"  class="nav-link {% block nav_career %}{% endblock %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Career
+        </a>
+        <a href="/product" class="nav-link {% block nav_product %}{% endblock %}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+          Product OS
+        </a>
       </nav>
-      <div class="text-xs text-gray-600 mt-4">@YOperatingSystem_BOT</div>
+      <div class="text-xs text-slate-600 mt-4 font-mono">@YOperatingSystem_BOT</div>
     </aside>
 
     <!-- Main content -->
@@ -39,16 +95,26 @@
 
   <style>
     .nav-link {
-      display: block;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
       text-decoration: none;
-      transition: all 0.15s;
+      transition: all 0.15s ease;
     }
-    .nav-link:hover { background: #1f2937; color: #f9fafb; }
-    .nav-link.active { background: #1d4ed8; color: #fff; }
+    .nav-link:hover {
+      background: rgba(6,182,212,0.08);
+      color: var(--text);
+    }
+    .nav-link.active {
+      background: rgba(6,182,212,0.12);
+      color: #06b6d4;
+      border: 1px solid rgba(6,182,212,0.2);
+    }
   </style>
 </body>
 </html>

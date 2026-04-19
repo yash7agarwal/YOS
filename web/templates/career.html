@@ -5,30 +5,30 @@
 {% block content %}
 <div class="max-w-5xl mx-auto">
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-white">💼 Career</h2>
-    <span class="text-xs text-gray-500">Auto-scanned daily · Use <code class="bg-gray-800 px-1 rounded">/run</code> to refresh</span>
+    <h2 class="text-2xl font-bold tracking-tight text-white">Career</h2>
+    <span class="text-xs text-slate-500">Auto-scanned daily &middot; Use <code class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 font-mono">/run</code> to refresh</span>
   </div>
 
   <div class="grid grid-cols-3 gap-6">
     <!-- Job Matches -->
     <div class="col-span-2 space-y-4">
-      <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">🎯 Top Matches</h3>
+      <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400">Top Matches</h3>
       {% if jobs %}
         {% for j in jobs[:8] %}
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-4">
+        <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-4 hover:border-slate-600 transition-colors duration-200">
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-white truncate">{{ j.title }}</p>
-              <p class="text-xs text-gray-400 mt-0.5">{{ j.company }} · {{ j.location }}</p>
-              <p class="text-xs text-gray-500 mt-1 leading-relaxed">{{ j.match_reason }}</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ j.company }} &middot; {{ j.location }}</p>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ j.match_reason }}</p>
               {% if j.url %}
-              <a href="{{ j.url }}" target="_blank" class="text-xs text-blue-400 hover:underline mt-1 block truncate">{{ j.url }}</a>
+              <a href="{{ j.url }}" target="_blank" class="text-xs text-cyan-400 hover:underline mt-1 block truncate">{{ j.url }}</a>
               {% endif %}
             </div>
             <div class="shrink-0 text-right">
               <div class="text-lg font-bold text-green-400">{{ (j.match_score * 100)|int }}%</div>
               <button onclick="applyJob({{ j.id }})"
-                class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg mt-1">
+                class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1 rounded-lg mt-1 transition-colors duration-150">
                 Apply
               </button>
             </div>
@@ -36,17 +36,17 @@
         </div>
         {% endfor %}
       {% else %}
-        <div class="bg-gray-800 border border-gray-700 rounded-xl p-8 text-center">
-          <p class="text-gray-400 text-sm">No job matches yet.</p>
-          <p class="text-gray-500 text-xs mt-1">Send <code class="bg-gray-700 px-1 rounded">/run</code> to scan for opportunities.</p>
+        <div class="border border-dashed border-slate-700 rounded-2xl p-8 text-center">
+          <p class="text-slate-400 text-sm">No job matches yet.</p>
+          <p class="text-slate-500 text-xs mt-1">Send <code class="bg-slate-700 px-1.5 py-0.5 rounded text-slate-300 font-mono">/run</code> to scan for opportunities.</p>
         </div>
       {% endif %}
 
       {% if applied %}
-      <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mt-6">✅ Applied</h3>
+      <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400 mt-6">Applied</h3>
         {% for j in applied %}
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 opacity-70">
-          <p class="text-sm text-white">{{ j.title }} <span class="text-gray-500">@ {{ j.company }}</span></p>
+        <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-3 opacity-70">
+          <p class="text-sm text-white">{{ j.title }} <span class="text-slate-500">@ {{ j.company }}</span></p>
         </div>
         {% endfor %}
       {% endif %}
@@ -56,35 +56,35 @@
     <div class="space-y-6">
       <!-- Add skill -->
       <div>
-        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Skills</h3>
+        <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400 mb-3">Skills</h3>
         <form action="/api/career/skill/add" method="post" class="space-y-2 mb-4">
           <input name="name" placeholder="Skill name" required
-            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+            class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"/>
           <div class="flex gap-2">
             <input name="category" placeholder="Category"
-              class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+              class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"/>
             <select name="level"
-              class="bg-gray-800 border border-gray-700 rounded-lg px-2 py-2 text-sm text-white focus:outline-none">
+              class="bg-slate-800 border border-slate-600 rounded-lg px-2 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20">
               <option value="learning">Learning</option>
               <option value="proficient">Proficient</option>
               <option value="expert">Expert</option>
             </select>
           </div>
           <button type="submit"
-            class="w-full bg-gray-700 hover:bg-gray-600 text-white text-sm py-2 rounded-lg">
+            class="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 text-sm py-2 rounded-lg font-medium transition-colors duration-150">
             + Add Skill
           </button>
         </form>
 
         {% for cat, skills in grouped_skills.items() %}
         <div class="mb-3">
-          <p class="text-xs text-gray-500 font-semibold uppercase mb-1">{{ cat }}</p>
+          <p class="text-[11px] text-slate-500 font-medium uppercase tracking-widest mb-1">{{ cat }}</p>
           <div class="flex flex-wrap gap-1">
             {% for s in skills %}
             <span class="text-xs px-2 py-1 rounded-full
               {% if s.level == 'expert' %}bg-green-900 text-green-300
-              {% elif s.level == 'proficient' %}bg-blue-900 text-blue-300
-              {% else %}bg-gray-700 text-gray-400{% endif %}">
+              {% elif s.level == 'proficient' %}bg-cyan-900 text-cyan-300
+              {% else %}bg-slate-700 text-slate-400{% endif %}">
               {{ s.name }}
             </span>
             {% endfor %}
@@ -96,9 +96,9 @@
       <!-- Resume -->
       {% if resume %}
       <div>
-        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Resume v{{ resume.version }}</h3>
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 max-h-40 overflow-y-auto">
-          <pre class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">{{ resume.content[:500] }}{% if resume.content|length > 500 %}…{% endif %}</pre>
+        <h3 class="text-[11px] font-medium uppercase tracking-widest text-slate-400 mb-2">Resume v{{ resume.version }}</h3>
+        <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-3 max-h-40 overflow-y-auto">
+          <pre class="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed font-mono">{{ resume.content[:500] }}{% if resume.content|length > 500 %}...{% endif %}</pre>
         </div>
       </div>
       {% endif %}

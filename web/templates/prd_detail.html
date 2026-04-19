@@ -5,26 +5,26 @@
 {% block content %}
 
 {% macro _comment(c) %}
-<div class="rounded-lg p-3 text-xs leading-relaxed
-  {% if c.type == 'command' %}bg-gray-900 border border-gray-700
-  {% elif c.type == 'response' %}bg-gray-850 border border-gray-700
+<div class="rounded-xl p-3 text-xs leading-relaxed
+  {% if c.type == 'command' %}bg-slate-800 border border-slate-700/50
+  {% elif c.type == 'response' %}bg-slate-800 border border-slate-700/50
   {% elif c.type == 'update' %}bg-green-950 border border-green-800
-  {% else %}bg-gray-900 border border-gray-700{% endif %}">
+  {% else %}bg-slate-800 border border-slate-700/50{% endif %}">
   <div class="flex items-center gap-2 mb-1">
     <span class="font-semibold
-      {% if c.author == 'claude' %}text-blue-400{% else %}text-gray-300{% endif %}">
+      {% if c.author == 'claude' %}text-cyan-400{% else %}text-slate-300{% endif %}">
       {% if c.author == 'claude' %}Claude{% else %}You{% endif %}
     </span>
-    <span class="text-gray-600">·</span>
-    <span class="text-gray-600">
-      {% if c.type == 'command' %}⌨️ command
-      {% elif c.type == 'update' %}✅ updated
-      {% elif c.type == 'response' %}💬 response
-      {% else %}📝 note{% endif %}
+    <span class="text-slate-600">&middot;</span>
+    <span class="text-slate-600">
+      {% if c.type == 'command' %}command
+      {% elif c.type == 'update' %}updated
+      {% elif c.type == 'response' %}response
+      {% else %}note{% endif %}
     </span>
-    <span class="ml-auto text-gray-700">{{ c.created_at[11:16] }}</span>
+    <span class="ml-auto text-slate-700 font-mono">{{ c.created_at[11:16] }}</span>
   </div>
-  <p class="text-gray-300 whitespace-pre-wrap">{{ c.content }}</p>
+  <p class="text-slate-300 whitespace-pre-wrap">{{ c.content }}</p>
 </div>
 {% endmacro %}
 
@@ -33,15 +33,15 @@
   <!-- Breadcrumb + header -->
   <div class="flex items-start justify-between mb-6">
     <div class="flex-1 min-w-0">
-      <a href="/product" class="text-xs text-gray-500 hover:text-gray-300 mb-2 inline-block">← Product OS</a>
-      <h1 class="text-2xl font-bold text-white leading-snug">{{ prd.title }}</h1>
-      <p class="text-xs text-gray-500 mt-1">Last updated {{ prd.updated_at[:10] }}</p>
+      <a href="/product" class="text-xs text-slate-500 hover:text-slate-300 mb-2 inline-block transition-colors">&larr; Product OS</a>
+      <h1 class="text-2xl font-bold tracking-tight text-white leading-snug">{{ prd.title }}</h1>
+      <p class="text-xs text-slate-500 mt-1">Last updated {{ prd.updated_at[:10] }}</p>
     </div>
 
     <!-- Status selector -->
     <form method="post" action="/api/product/prd/{{ prd.id }}/status" class="ml-6 shrink-0">
       <select name="status" onchange="this.form.submit()"
-              class="text-sm rounded-lg px-3 py-2 border border-gray-700 bg-gray-800 text-gray-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-600">
+              class="text-sm rounded-lg px-3 py-2 border border-slate-600 bg-slate-800 text-slate-200 cursor-pointer focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20">
         {% for s in status_options %}
         <option value="{{ s }}" {% if s == prd.status %}selected{% endif %}>{{ s.capitalize() }}</option>
         {% endfor %}
@@ -55,22 +55,22 @@
     <div class="lg:col-span-2 space-y-5">
 
       {% set section_meta = [
-        ("overview",        "📋 Overview",         "What is this product/feature?"),
-        ("problem",         "🔍 Problem",           "What problem does this solve?"),
-        ("goals",           "🎯 Goals",             "Concrete, measurable objectives"),
-        ("non_goals",       "🚫 Non-Goals",         "Explicitly out of scope"),
-        ("user_stories",    "👤 User Stories",      "As a [user], I want..."),
-        ("requirements",    "⚙️ Requirements",      "Functional requirements"),
-        ("success_metrics", "📊 Success Metrics",   "How will we know it worked?"),
-        ("open_questions",  "❓ Open Questions",    "Unresolved decisions"),
+        ("overview",        "Overview",          "What is this product/feature?"),
+        ("problem",         "Problem",            "What problem does this solve?"),
+        ("goals",           "Goals",              "Concrete, measurable objectives"),
+        ("non_goals",       "Non-Goals",          "Explicitly out of scope"),
+        ("user_stories",    "User Stories",       "As a [user], I want..."),
+        ("requirements",    "Requirements",       "Functional requirements"),
+        ("success_metrics", "Success Metrics",    "How will we know it worked?"),
+        ("open_questions",  "Open Questions",     "Unresolved decisions"),
       ] %}
 
       {% for field, label, placeholder in section_meta %}
       <div class="card" id="section-{{ field }}">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-gray-300">{{ label }}</h2>
+          <h2 class="text-[11px] font-medium uppercase tracking-widest text-slate-400">{{ label }}</h2>
           <button onclick="editSection('{{ field }}')"
-                  class="text-xs text-gray-600 hover:text-blue-400 transition-colors px-2 py-1 rounded hover:bg-gray-700">
+                  class="text-xs text-slate-600 hover:text-cyan-400 transition-colors px-2 py-1 rounded hover:bg-slate-700">
             Edit
           </button>
         </div>
@@ -78,9 +78,9 @@
         <!-- Display mode -->
         <div id="display-{{ field }}">
           {% if prd[field] %}
-          <p class="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{{ prd[field] }}</p>
+          <p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{{ prd[field] }}</p>
           {% else %}
-          <p class="text-sm text-gray-600 italic">{{ placeholder }} — issue a command below to populate this section.</p>
+          <p class="text-sm text-slate-600 italic">{{ placeholder }} -- issue a command below to populate this section.</p>
           {% endif %}
         </div>
 
@@ -89,15 +89,15 @@
           <form method="post" action="/api/product/prd/{{ prd.id }}/command"
                 onsubmit="submitSectionEdit(event, '{{ field }}')">
             <textarea name="command" rows="4"
-                      class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-y"
+                      class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-y"
                       placeholder="Describe what you want for this section...">update {{ field.replace('_', ' ') }}: {{ prd[field] or '' }}</textarea>
             <div class="flex gap-2 mt-2">
               <button type="submit"
-                      class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors">
+                      class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg transition-colors duration-150">
                 Save
               </button>
               <button type="button" onclick="cancelEdit('{{ field }}')"
-                      class="text-xs text-gray-400 hover:text-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-700 transition-colors">
+                      class="text-xs text-slate-400 hover:text-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors">
                 Cancel
               </button>
             </div>
@@ -112,31 +112,33 @@
     <div class="lg:col-span-1 space-y-4">
 
       <!-- Command terminal -->
-      <div class="card border-blue-800">
-        <h2 class="text-sm font-semibold text-blue-400 mb-3">⚡ Development Command</h2>
+      <div class="card border-cyan-800/50">
+        <h2 class="text-[11px] font-medium uppercase tracking-widest text-cyan-400 mb-3">Development Command</h2>
         <div>
           <textarea id="cmd-input" rows="3"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
+                    class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-none"
                     placeholder="e.g. Add authentication requirements&#10;Generate user stories for mobile&#10;What are the key risks?"></textarea>
           <button onclick="runCommand()"
-                  class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  class="mt-2 w-full bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium py-2 rounded-lg transition-colors duration-150 flex items-center justify-center gap-2 active:scale-[0.98] active:translate-y-[1px]"
                   id="cmd-btn">
             <span id="cmd-label">Run Command</span>
-            <span id="cmd-spinner" class="hidden">⏳</span>
+            <span id="cmd-spinner" class="hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            </span>
           </button>
         </div>
-        <p class="text-xs text-gray-600 mt-2">Commands update PRD sections or respond with analysis. All changes are logged below.</p>
+        <p class="text-xs text-slate-600 mt-2">Commands update PRD sections or respond with analysis. All changes are logged below.</p>
       </div>
 
       <!-- Comment / add note -->
       <div class="card">
-        <h2 class="text-sm font-semibold text-gray-300 mb-3">💬 Add Note</h2>
+        <h2 class="text-[11px] font-medium uppercase tracking-widest text-slate-300 mb-3">Add Note</h2>
         <form method="post" action="/api/product/prd/{{ prd.id }}/comment">
           <textarea name="content" rows="2"
-                    class="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
+                    class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 resize-none"
                     placeholder="Decision, context, or question..."></textarea>
           <button type="submit"
-                  class="mt-2 w-full bg-gray-700 hover:bg-gray-600 text-white text-sm py-2 rounded-lg transition-colors">
+                  class="mt-2 w-full bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 text-sm py-2 rounded-lg font-medium transition-colors duration-150">
             Save Note
           </button>
         </form>
@@ -144,14 +146,14 @@
 
       <!-- Thread -->
       <div class="card">
-        <h2 class="text-sm font-semibold text-gray-300 mb-4">🧵 Thread</h2>
+        <h2 class="text-[11px] font-medium uppercase tracking-widest text-slate-300 mb-4">Thread</h2>
         <div id="thread" class="space-y-3 max-h-96 overflow-y-auto pr-1">
           {% if comments %}
             {% for c in comments %}
             {{ _comment(c) }}
             {% endfor %}
           {% else %}
-          <p class="text-xs text-gray-600 italic">No activity yet.</p>
+          <p class="text-xs text-slate-600 italic">No activity yet.</p>
           {% endif %}
         </div>
       </div>
@@ -206,18 +208,18 @@ async function runCommand() {
 }
 
 function commentHtml(author, type, content, time) {
-  const authorColor = author === 'Claude' ? 'text-blue-400' : 'text-gray-300';
-  const bg = type === 'update' ? 'bg-green-950 border-green-800' : 'bg-gray-900 border-gray-700';
-  const typeIcon = type === 'command' ? '⌨️ command' : type === 'update' ? '✅ updated' : '💬 response';
+  const authorColor = author === 'Claude' ? 'text-cyan-400' : 'text-slate-300';
+  const bg = type === 'update' ? 'bg-green-950 border-green-800' : 'bg-slate-800 border-slate-700/50';
+  const typeLabel = type === 'command' ? 'command' : type === 'update' ? 'updated' : 'response';
   const escaped = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<div class="rounded-lg p-3 text-xs leading-relaxed ${bg} border">
+  return `<div class="rounded-xl p-3 text-xs leading-relaxed ${bg} border">
     <div class="flex items-center gap-2 mb-1">
       <span class="font-semibold ${authorColor}">${author}</span>
-      <span class="text-gray-600">·</span>
-      <span class="text-gray-600">${typeIcon}</span>
-      <span class="ml-auto text-gray-700">${time}</span>
+      <span class="text-slate-600">&middot;</span>
+      <span class="text-slate-600">${typeLabel}</span>
+      <span class="ml-auto text-slate-700 font-mono">${time}</span>
     </div>
-    <p class="text-gray-300 whitespace-pre-wrap">${escaped}</p>
+    <p class="text-slate-300 whitespace-pre-wrap">${escaped}</p>
   </div>`;
 }
 

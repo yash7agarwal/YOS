@@ -5,18 +5,18 @@
 {% block content %}
 <div class="max-w-6xl mx-auto">
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-white">📥 Product Backlog</h2>
-    <span class="text-xs text-gray-500">Drag ideas via Telegram: <code class="bg-gray-800 px-1 rounded">/idea</code></span>
+    <h2 class="text-2xl font-bold tracking-tight text-white">Product Backlog</h2>
+    <span class="text-xs text-slate-500">Drag ideas via Telegram: <code class="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 font-mono">/idea</code></span>
   </div>
 
   <!-- Add idea form -->
   <form action="/api/backlog/add" method="post" class="flex gap-3 mb-8">
-    <input name="title" placeholder="New idea…" required
-      class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+    <input name="title" placeholder="New idea..." required
+      class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"/>
     <input name="description" placeholder="Description (optional)"
-      class="w-64 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"/>
+      class="w-64 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20"/>
     <button type="submit"
-      class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg font-medium">
+      class="bg-cyan-600 hover:bg-cyan-500 text-white text-sm px-5 py-2 rounded-lg font-medium transition-colors duration-150 active:scale-[0.98] active:translate-y-[1px]">
       + Add
     </button>
   </form>
@@ -26,19 +26,19 @@
     {% for status in statuses %}
     <div>
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">
-          {% if status == 'inbox' %}📥 Inbox
-          {% elif status == 'in_progress' %}🔄 In Progress
-          {% elif status == 'done' %}✅ Done
-          {% else %}📦 Archived{% endif %}
+        <span class="text-[11px] font-medium uppercase tracking-widest text-slate-400">
+          {% if status == 'inbox' %}Inbox
+          {% elif status == 'in_progress' %}In Progress
+          {% elif status == 'done' %}Done
+          {% else %}Archived{% endif %}
         </span>
-        <span class="text-xs bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">
+        <span class="text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">
           {{ columns[status]|length }}
         </span>
       </div>
       <div class="space-y-2 min-h-24">
         {% for idea in columns[status] %}
-        <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 hover:border-gray-600 transition-colors">
+        <div class="bg-slate-800/80 border border-slate-700/50 rounded-xl p-4 hover:border-slate-600 transition-colors duration-200">
           <div class="flex items-start justify-between gap-2">
             <p class="text-sm text-white leading-snug">{{ idea.title }}</p>
             {% if idea.priority_score %}
@@ -46,12 +46,12 @@
             {% endif %}
           </div>
           {% if idea.priority_reason %}
-          <p class="text-xs text-gray-500 mt-1 leading-snug">{{ idea.priority_reason }}</p>
+          <p class="text-xs text-slate-500 mt-1 leading-snug">{{ idea.priority_reason }}</p>
           {% endif %}
           <div class="flex gap-1 mt-2 flex-wrap">
-            {% if status != 'in_progress' %}<button onclick="move({{ idea.id }}, 'in_progress')" class="move-btn">→ Start</button>{% endif %}
-            {% if status != 'done' %}<button onclick="move({{ idea.id }}, 'done')" class="move-btn text-green-400">✓ Done</button>{% endif %}
-            {% if status != 'archived' %}<button onclick="move({{ idea.id }}, 'archived')" class="move-btn text-gray-500">Archive</button>{% endif %}
+            {% if status != 'in_progress' %}<button onclick="move({{ idea.id }}, 'in_progress')" class="move-btn">Start</button>{% endif %}
+            {% if status != 'done' %}<button onclick="move({{ idea.id }}, 'done')" class="move-btn done-btn">Done</button>{% endif %}
+            {% if status != 'archived' %}<button onclick="move({{ idea.id }}, 'archived')" class="move-btn text-slate-500">Archive</button>{% endif %}
           </div>
         </div>
         {% endfor %}
@@ -64,15 +64,17 @@
 <style>
   .move-btn {
     font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: #1f2937;
-    color: #9ca3af;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--text-secondary);
     cursor: pointer;
-    border: 1px solid #374151;
-    transition: all 0.1s;
+    border: 1px solid var(--border-subtle);
+    transition: all 0.15s ease;
   }
-  .move-btn:hover { background: #374151; color: #f9fafb; }
+  .move-btn:hover { background: var(--border); color: var(--text); }
+  .move-btn.done-btn { color: #22c55e; }
+  .move-btn.done-btn:hover { background: rgba(34,197,94,0.15); color: #4ade80; }
 </style>
 
 <script>

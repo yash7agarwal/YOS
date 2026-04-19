@@ -38,7 +38,7 @@ def _auth(fn):
         except Exception as exc:
             logger.exception(f"Error in {cmd}: {exc}")
             log_bot_interaction("command", text, cmd, "error", str(exc))
-            await update.message.reply_text(f"⚠️ Error: {exc}")
+            await update.message.reply_text("⚠️ Something went wrong. Check server logs for details.")
     return wrapper
 
 
