@@ -94,7 +94,7 @@ async def cmd_monthly(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await update.message.reply_text(f"⚠️ Monthly agent error: {e}")
 
 
-async def cmd_health(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def cmd_syshealth(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """/syshealth — check and auto-restart all YOS processes"""
     await update.message.reply_text("🩺 Checking system health…")
     try:

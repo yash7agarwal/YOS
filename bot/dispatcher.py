@@ -14,7 +14,7 @@ from bot.commands.goals import cmd_goal, cmd_goals, cmd_progress, cmd_checkin
 from bot.commands.journal import cmd_note, cmd_journal
 from bot.commands.health import cmd_health, cmd_healthlog
 from bot.commands.today import cmd_today
-from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents, cmd_weekly, cmd_monthly, cmd_health
+from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents, cmd_weekly, cmd_monthly, cmd_syshealth
 from bot.commands.career import cmd_jobs, cmd_apply, cmd_skills, cmd_skill, cmd_resume
 from bot.commands.domain import cmd_agent, cmd_ask, cmd_reset_agent
 from bot.commands.workspace import cmd_guide, cmd_inbox, handle_natural
@@ -137,7 +137,7 @@ def register(app: Application) -> None:
     app.add_handler(CommandHandler("run", wrap(cmd_run_agents)))
     app.add_handler(CommandHandler("weekly", wrap(cmd_weekly)))
     app.add_handler(CommandHandler("monthly", wrap(cmd_monthly)))
-    app.add_handler(CommandHandler("syshealth", wrap(cmd_health)))
+    app.add_handler(CommandHandler("syshealth", wrap(cmd_syshealth)))
 
     # Domain agents
     app.add_handler(CommandHandler("agent",  wrap(cmd_agent)))
