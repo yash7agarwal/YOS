@@ -17,7 +17,7 @@ from bot.commands.today import cmd_today
 from bot.commands.intel import cmd_brief, cmd_tech, cmd_biz, cmd_geo, cmd_run_agents, cmd_weekly, cmd_monthly, cmd_health
 from bot.commands.career import cmd_jobs, cmd_apply, cmd_skills, cmd_skill, cmd_resume
 from bot.commands.domain import cmd_agent, cmd_ask, cmd_reset_agent
-from bot.commands.workspace import cmd_guide, cmd_inbox
+from bot.commands.workspace import cmd_guide, cmd_inbox, handle_natural
 
 load_dotenv()
 logger = get_logger(__name__)
@@ -86,7 +86,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "🌐 *Workspace bridge*\n"
         "`/guide <project> <msg>` — push guidance to any sibling project (jobs-os, mmt-os, all, ...)\n"
         "`/guide <project> answer: <text>` — answer the most recent open question from that project\n"
-        "`/inbox [project]` — view recent guidance + open questions",
+        "`/inbox [project]` — view recent guidance + open questions\n"
+        "_Plain text (no slash) is auto-routed:_ reply to a bot question → answers it; otherwise → guidance for last-active project.",
         parse_mode="Markdown",
     )
 
@@ -147,5 +148,11 @@ def register(app: Application) -> None:
     # Workspace bridge — push guidance to / read inbox of any sibling project
     app.add_handler(CommandHandler("guide", wrap(cmd_guide)))
     app.add_handler(CommandHandler("inbox", wrap(cmd_inbox)))
+
+    # Natural-language fallback for the workspace bridge: any plain text
+    # (no command prefix) gets routed via handle_natural — replies to bot
+    # questions become answers, anything else becomes guidance for the
+    # last-active project. Registered LAST so command handlers take priority.
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, wrap(handle_natural)))
 
     logger.info("All command handlers registered.")

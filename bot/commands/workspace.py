@@ -12,6 +12,7 @@ sends a Telegram message and writes a "question" entry to the same inbox.
 from __future__ import annotations
 
 import json
+import re
 import time
 from pathlib import Path
 
@@ -147,6 +148,112 @@ async def cmd_guide(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(
             f"📝 Saved guidance for *{project}*:\n\n> {message}\n\n"
             f"_Claude will pick this up at the next session in that project._",
+            parse_mode="Markdown",
+        )
+
+
+def _read_inbox() -> list[dict]:
+    if not INBOX.exists():
+        return []
+    rows = []
+    for line in INBOX.read_text().splitlines():
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return rows
+
+
+def _write_inbox(rows: list[dict]) -> None:
+    INBOX.parent.mkdir(parents=True, exist_ok=True)
+    INBOX.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+
+def _last_active_project(rows: list[dict]) -> str | None:
+    """Most recent project that appeared in the inbox (excluding 'all')."""
+    for r in reversed(rows):
+        proj = r.get("project", "")
+        if proj and proj.lower() != "all":
+            return proj
+    return None
+
+
+async def handle_natural(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Free-text handler: any plain message to the bot becomes inbox guidance.
+
+    Routing rules:
+      1. If the user replies (long-press → reply) to a bot message that contains
+         a `[<project>]` tag, route as `kind=answer` to the most recent pending
+         question for that project. Best UX — zero typing of project name.
+      2. Otherwise, route as `kind=guidance` for the last-active project (most
+         recent project in the inbox). If the inbox is empty, default to "all".
+    """
+    if not update.message or not update.message.text:
+        return
+    text = update.message.text.strip()
+    if not text or text.startswith("/"):
+        return  # commands handled elsewhere
+
+    rows = _read_inbox()
+    project: str | None = None
+    answers_id: str | None = None
+
+    # Path 1: reply to a bot question
+    reply = update.message.reply_to_message
+    if reply and reply.text:
+        m = re.search(r"\[([\w\-]+)\]", reply.text)
+        if m:
+            project = m.group(1).lower()
+        if project:
+            for r in reversed(rows):
+                if (
+                    r.get("kind") == "question"
+                    and r.get("status") == "pending"
+                    and r.get("project", "").lower() == project.lower()
+                ):
+                    answers_id = r.get("id")
+                    break
+
+    # Path 2: plain text — last-active project
+    if not project:
+        project = _last_active_project(rows) or "all"
+
+    # Mark a matching question as answered, in place
+    if answers_id:
+        for r in rows:
+            if r.get("id") == answers_id:
+                r["status"] = "answered"
+                r["answer"] = text
+                r["answered_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                break
+
+    new_entry = {
+        "id": f"{int(time.time())}-tg",
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "kind": "answer" if answers_id else "guidance",
+        "project": project,
+        "from": "user",
+        "text": text,
+        "status": "unread",
+        "channel": "natural",
+    }
+    if answers_id:
+        new_entry["answers"] = answers_id
+
+    rows.append(new_entry)
+    _write_inbox(rows)
+
+    if answers_id:
+        await update.message.reply_text(
+            f"✅ Answered question `{answers_id}` for *{project}*.",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text(
+            f"📝 Saved guidance for *{project}*.\n\n"
+            f"_If this was meant for a different project, say so in the next message — last-active project is the default fallback._",
             parse_mode="Markdown",
         )
 
