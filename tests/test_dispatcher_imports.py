@@ -119,8 +119,9 @@ def test_no_duplicate_command_callbacks() -> None:
     # above already lets aliases through when commands overlap; we only
     # reach this list when the command sets are truly disjoint.
     allow_alias_pairs = {
-        ("bot.commands.domain", "cmd_agent"),  # /agent + /agents
-        ("bot.dispatcher", "cmd_help"),        # /help + /start
+        ("bot.commands.domain", "cmd_agent"),    # /agent + /agents
+        ("bot.dispatcher", "cmd_help"),          # /help + /start
+        ("bot.commands.project", "cmd_project"), # /project + /p
     }
     real_duplicates = [
         d for d in duplicates

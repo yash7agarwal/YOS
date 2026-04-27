@@ -212,12 +212,30 @@ def init_db() -> None:
 
         -- ── DOMAIN AGENT STATE ───────────────────────────────────────
         CREATE TABLE IF NOT EXISTS user_agent_state (
-            id           INTEGER PRIMARY KEY DEFAULT 1,
-            agent_name   TEXT NOT NULL DEFAULT 'product',
+            id             INTEGER PRIMARY KEY DEFAULT 1,
+            agent_name     TEXT NOT NULL DEFAULT 'product',
+            conversation   TEXT NOT NULL DEFAULT '[]',
+            active_project TEXT NOT NULL DEFAULT 'jobs-os',
+            updated_at     TEXT NOT NULL
+        );
+
+        -- ── PROJECT-SCOPED CONVERSATIONS ────────────────────────────
+        -- One thread per project. Switching projects swaps the thread;
+        -- switching agents within the same project preserves it.
+        CREATE TABLE IF NOT EXISTS project_conversations (
+            project      TEXT PRIMARY KEY,
             conversation TEXT NOT NULL DEFAULT '[]',
             updated_at   TEXT NOT NULL
         );
         """)
+
+        # Idempotent column add for older DBs that pre-date active_project.
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(user_agent_state)").fetchall()}
+        if "active_project" not in cols:
+            conn.execute(
+                "ALTER TABLE user_agent_state ADD COLUMN active_project TEXT NOT NULL DEFAULT 'jobs-os'"
+            )
+
     print(f"YOS database initialized at {DB_PATH}")
 
 
@@ -653,27 +671,47 @@ def get_prd_comments(prd_id: int) -> list[dict]:
 # ── DOMAIN AGENT STATE ────────────────────────────────────────────────────────
 
 def get_agent_state() -> dict:
-    """Return {agent_name, conversation} for the single-user session."""
+    """Return {agent_name, conversation, active_project} for the single-user session."""
     now = datetime.utcnow().isoformat()
     with get_conn() as conn:
         row = conn.execute("SELECT * FROM user_agent_state WHERE id=1").fetchone()
         if not row:
             conn.execute(
-                "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,'product','[]',?)",
+                "INSERT INTO user_agent_state (id, agent_name, conversation, active_project, updated_at) "
+                "VALUES (1,'product','[]','jobs-os',?)",
                 (now,),
             )
-            return {"agent_name": "product", "conversation": []}
-        return {"agent_name": row["agent_name"], "conversation": json.loads(row["conversation"])}
+            return {"agent_name": "product", "conversation": [], "active_project": "jobs-os"}
+        return {
+            "agent_name": row["agent_name"],
+            "conversation": json.loads(row["conversation"]),
+            "active_project": row["active_project"] if "active_project" in row.keys() else "jobs-os",
+        }
 
 
 def set_agent(name: str) -> None:
-    """Switch active agent and clear conversation history."""
+    """Switch active agent. Preserves active_project + agent-thread + project threads."""
     now = datetime.utcnow().isoformat()
+    state = get_agent_state()
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,?,?,?) "
+            "INSERT INTO user_agent_state (id, agent_name, conversation, active_project, updated_at) "
+            "VALUES (1,?,?,?,?) "
             "ON CONFLICT(id) DO UPDATE SET agent_name=excluded.agent_name, conversation='[]', updated_at=excluded.updated_at",
-            (name, "[]", now),
+            (name, "[]", state["active_project"], now),
+        )
+
+
+def set_active_project(project: str) -> None:
+    """Switch the active project for plain-text messages. Preserves agent + threads."""
+    now = datetime.utcnow().isoformat()
+    state = get_agent_state()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO user_agent_state (id, agent_name, conversation, active_project, updated_at) "
+            "VALUES (1,?,?,?,?) "
+            "ON CONFLICT(id) DO UPDATE SET active_project=excluded.active_project, updated_at=excluded.updated_at",
+            (state["agent_name"], json.dumps(state["conversation"]), project, now),
         )
 
 
@@ -686,9 +724,10 @@ def append_agent_message(role: str, content: str) -> None:
     history = history[-20:]  # keep last 20 turns (10 exchanges)
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO user_agent_state (id, agent_name, conversation, updated_at) VALUES (1,?,?,?) "
+            "INSERT INTO user_agent_state (id, agent_name, conversation, active_project, updated_at) "
+            "VALUES (1,?,?,?,?) "
             "ON CONFLICT(id) DO UPDATE SET conversation=excluded.conversation, updated_at=excluded.updated_at",
-            (state["agent_name"], json.dumps(history), now),
+            (state["agent_name"], json.dumps(history), state["active_project"], now),
         )
 
 
@@ -698,4 +737,44 @@ def clear_agent_conversation() -> None:
     with get_conn() as conn:
         conn.execute(
             "UPDATE user_agent_state SET conversation='[]', updated_at=? WHERE id=1", (now,)
+        )
+
+
+# ── PROJECT-SCOPED CONVERSATIONS ──────────────────────────────────────────────
+
+def get_project_conversation(project: str) -> list[dict]:
+    """Return the conversation thread for a project (plain-text channel)."""
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT conversation FROM project_conversations WHERE project=?", (project,)
+        ).fetchone()
+        if not row:
+            return []
+        return json.loads(row["conversation"])
+
+
+def append_project_message(project: str, role: str, content: str) -> None:
+    """Append to a project's conversation, keeping last 20 turns (10 exchanges)."""
+    now = datetime.utcnow().isoformat()
+    history = get_project_conversation(project)
+    history.append({"role": role, "content": content})
+    history = history[-20:]
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO project_conversations (project, conversation, updated_at) "
+            "VALUES (?,?,?) "
+            "ON CONFLICT(project) DO UPDATE SET conversation=excluded.conversation, updated_at=excluded.updated_at",
+            (project, json.dumps(history), now),
+        )
+
+
+def clear_project_conversation(project: str) -> None:
+    """Reset a project's conversation thread."""
+    now = datetime.utcnow().isoformat()
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO project_conversations (project, conversation, updated_at) "
+            "VALUES (?, '[]', ?) "
+            "ON CONFLICT(project) DO UPDATE SET conversation='[]', updated_at=excluded.updated_at",
+            (project, now),
         )

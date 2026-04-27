@@ -18,16 +18,37 @@ AGENTS: dict[str, object] = {
 }
 
 
-def invoke(agent_name: str, message: str, history: list[dict]) -> str:
+def invoke(
+    agent_name: str,
+    message: str,
+    history: list[dict],
+    project_context: str = "",
+    max_tokens: int = 1024,
+) -> str:
     """
     Call the named domain agent with message + conversation history.
-    Returns the agent's text response.
+
+    When project_context is non-empty, it's prepended to the system prompt so
+    the agent answers with full awareness of the active workspace project
+    (CLAUDE.md, recent commits, open questions). Used by the natural-language
+    Telegram handler to give Claude-terminal-grade responses on mobile.
     """
     from utils.claude_client import ask
 
     agent = AGENTS.get(agent_name)
     if agent is None:
         agent = product  # default fallback
+
+    system = agent.SYSTEM_PROMPT
+    if project_context:
+        system = (
+            f"{project_context}\n\n"
+            f"---\n\n"
+            f"You are operating as the **{agent_name}** lens for the project above. "
+            f"Use the project's CLAUDE.md instructions and recent context to inform every reply. "
+            f"Your persona / lens:\n\n"
+            f"{agent.SYSTEM_PROMPT}"
+        )
 
     # Build history context (last 10 turns)
     context_lines = []
@@ -43,8 +64,8 @@ def invoke(agent_name: str, message: str, history: list[dict]) -> str:
 
     return ask(
         prompt,
-        system=agent.SYSTEM_PROMPT,
-        max_tokens=1024,
+        system=system,
+        max_tokens=max_tokens,
     )
 
 
