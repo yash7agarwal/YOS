@@ -2,6 +2,35 @@
 
 All notable changes are documented here following [Semantic Versioning](https://semver.org/).
 
+## [0.10.1] — 2026-04-28 — Fix VERSION sync drift from v0.10.0
+
+The v0.10.0 commit + tag shipped the active-project feature correctly, but the `VERSION` file + this `CHANGELOG.md` did not get bumped in that commit (Edit operations to those files failed silently before the commit, and only the code changes made it). The tag `v0.10.0` therefore points to a commit with `VERSION=0.9.2`. This patch corrects the drift forward.
+
+### Changed
+- `VERSION` `0.9.2` → `0.10.1`.
+- `CHANGELOG.md` — backfilled the v0.10.0 entry below this one + added this v0.10.1 entry.
+
+## [0.10.0] — 2026-04-28 — Active-project plain-text Telegram channel
+
+Plain-text messages to the YOS bot now run a **real Claude conversation in the context of the active workspace project** — `CLAUDE.md` + recent commits + open inbox questions auto-loaded. `/project` switches which sibling project the next plain-text message gets answered against.
+
+### Added
+- `bot/commands/project.py` — `/project` (show active + list) / `/project <name>` (switch) / `/project <name> reset` (switch + clear thread). `/p` registered as alias.
+- `utils/project_context.py` — loads `CLAUDE.md` + recent `git log` + open inbox questions for any sibling project (`jobs-os`, `mmt-os`, `yos`, `portfolio`, `gmailorganization`, `_workspace-os`). 5-minute in-memory cache per project; budget-capped (CLAUDE.md ≤6K chars, learnings ≤2K).
+- `store/database.py` — new column `active_project` on `user_agent_state` (default `jobs-os`); idempotent `ALTER TABLE` for pre-existing DBs.
+- `store/database.py` — new table `project_conversations` (one thread per project; switching projects swaps the thread, switching agents within a project preserves it).
+- `tests/test_project_command.py` — coverage for `/project` parsing + state.
+- `tests/test_project_context.py` — coverage for `project_context` loader + cache.
+
+### Changed
+- `bot/commands/workspace.py` — `handle_natural` rewritten. Plain-text now invokes the active domain agent with the loaded project context; bot replies are tagged `📂 [<project>] · <emoji> <agent>`. The free-text → guidance path is gone (use `/guide` explicitly when you want the inbox-only channel).
+- `agents/domain/__init__.py` — `invoke()` now accepts `project_context: str = ""` and `max_tokens: int = 1024`. Project context, when non-empty, is prepended to the system prompt.
+- `bot/dispatcher.py` — registers `/project` + `/p` handlers; help text refreshed to describe the natural-text routing.
+
+### Migration notes
+- Existing DBs pick up the new column on next `init_db()` via the idempotent `ALTER TABLE` — no manual migration.
+- `handle_natural`'s old behavior (plain text → inbox guidance) is intentionally removed. Use `/guide <project> <message>` for the inbox-only channel.
+
 ## [0.9.2] — 2026-04-19 — Frontend design refresh + hardening
 
 ### Added
